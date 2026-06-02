@@ -1,0 +1,16 @@
+{
+  "candidate_label_cols": [
+    "label",
+    "label_cost_adjusted",
+    "label_3class",
+    "label_dynamic_3class",
+    "label_dynamic_binary",
+    "label_trade_success"
+  ],
+  "current_target_col": "label",
+  "output_files": {
+    "label_summary": "outputs\\diagnostics\\label_summary.csv",
+    "label_class_distribution": "outputs\\diagnostics\\label_class_distribution.csv",
+    "label_return_by_class": "outputs\\diagnostics\\label_return_by_class.csv"
+  }
+}
