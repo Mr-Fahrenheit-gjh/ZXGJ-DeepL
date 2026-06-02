@@ -1,0 +1,14 @@
+{
+  "lookback": 32,
+  "horizon": 3,
+  "target_col": "label_dynamic_binary",
+  "sequence_mode": "continuous",
+  "feature_count": 194,
+  "train_seq_count": 47361,
+  "valid_seq_count": 10124,
+  "test_seq_count": 10124,
+  "train_positive_rate": 0.1504191212178797,
+  "pos_weight": 5.6480909601347555,
+  "best_valid_auc": 0.6491598660648703,
+  "test_auc": 0.6412329539277636
+}
