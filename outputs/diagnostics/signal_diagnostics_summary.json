@@ -1,0 +1,19 @@
+{
+  "test_auc": 0.5942785742382684,
+  "best_valid_auc": 0.6424938193694907,
+  "sample_count": 10124,
+  "positive_rate": 0.28921374678611755,
+  "pred_prob_mean": 0.2788952589035034,
+  "pred_prob_std": 0.06607526540756226,
+  "pred_prob_min": 0.10604584217071533,
+  "pred_prob_max": 0.4684883952140808,
+  "signal_count_at_055": 0,
+  "recommended_quantile_threshold_080": 0.34048356413841246,
+  "recommended_signal_count_080": 2025,
+  "output_files": {
+    "probability_describe": "outputs\\diagnostics\\signal_probability_describe.csv",
+    "group_analysis": "outputs\\diagnostics\\signal_group_analysis.csv",
+    "threshold_diagnostics": "outputs\\diagnostics\\signal_threshold_diagnostics.csv",
+    "fixed_threshold_diagnostics": "outputs\\diagnostics\\signal_fixed_threshold_diagnostics.csv"
+  }
+}
