@@ -4,7 +4,7 @@
   "target_col":"label_round_trip_net",
   "sequence_mode":"continuous",
   "feature_count":194,
-  "train_seq_count":47361,
+  "train_seq_count":47360,
   "valid_seq_count":10124,
   "test_seq_count":10124,
   "mvp_config":{

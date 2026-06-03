@@ -1,22 +1,20 @@
 {
-  "test_auc": 0.6352231596809339,
-  "best_valid_auc": 0.6853285029130906,
+  "test_auc": 0.6362534366794228,
+  "best_valid_auc": 0.6875402619321064,
   "sample_count": 10124,
-  "positive_rate": 0.22896088659763336,
+  "positive_rate": 0.2297510802745819,
   "target_col": "label_round_trip_net",
   "label_threshold": 0.003,
-  "pred_prob_mean": 0.5695546865463257,
-  "pred_prob_std": 0.17441987991333008,
-  "pred_prob_min": 0.03812544420361519,
-  "pred_prob_max": 0.8382236957550049,
-  "signal_count_at_055": 6467,
-  "recommended_quantile_threshold_080": 0.7197511076927186,
+  "pred_prob_mean": 0.5795825123786926,
+  "pred_prob_std": 0.16482561826705933,
+  "pred_prob_min": 0.02583402954041958,
+  "pred_prob_max": 0.8444871306419373,
+  "recommended_quantile_threshold_080": 0.7249458551406861,
   "recommended_signal_count_080": 2025,
   "note": "This file is signal diagnostics only. Real trading PnL is in outputs/diagnostics/realistic_backtest/.",
   "output_files": {
     "probability_describe": "outputs\\diagnostics\\signal_probability_describe.csv",
     "group_analysis": "outputs\\diagnostics\\signal_group_analysis.csv",
-    "threshold_diagnostics": "outputs\\diagnostics\\signal_threshold_diagnostics.csv",
-    "fixed_threshold_diagnostics": "outputs\\diagnostics\\signal_fixed_threshold_diagnostics.csv"
+    "threshold_diagnostics": "outputs\\diagnostics\\signal_threshold_diagnostics.csv"
   }
 }

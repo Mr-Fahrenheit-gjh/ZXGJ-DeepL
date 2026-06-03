@@ -1,9 +1,9 @@
 label_col,split,class,count,ratio
-label_round_trip_net,all,0,55288,0.8166014326859169
-label_round_trip_net,all,1,12417,0.18339856731408316
-label_round_trip_net,train,0,39312,0.8294895870698205
-label_round_trip_net,train,1,8081,0.17051041293017957
-label_round_trip_net,valid,0,8142,0.8016935801496652
-label_round_trip_net,valid,1,2014,0.1983064198503348
-label_round_trip_net,test,0,7834,0.7713666797951949
-label_round_trip_net,test,1,2322,0.22863332020480504
+label_round_trip_net,all,0,55264,0.8162590098073969
+label_round_trip_net,all,1,12440,0.1837409901926031
+label_round_trip_net,train,0,39322,0.8297180958811614
+label_round_trip_net,train,1,8070,0.17028190411883862
+label_round_trip_net,valid,0,8116,0.7991335171327294
+label_round_trip_net,valid,1,2040,0.20086648286727057
+label_round_trip_net,test,0,7826,0.7705789680976762
+label_round_trip_net,test,1,2330,0.22942103190232374

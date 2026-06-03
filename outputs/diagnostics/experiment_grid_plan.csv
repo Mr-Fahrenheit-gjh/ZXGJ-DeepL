@@ -1,2 +1,2 @@
 lookback,horizon,target_col,label_definition,round_trip_cost,sequence_mode,status,lookback_minutes,horizon_minutes
-32,3,label_round_trip_net,future_return > 2 * (commission_rate + slippage_rate),0.003,continuous,active,160,15
+32,3,label_round_trip_net,trade_return > 2 * (commission_rate + slippage_rate),0.003,continuous,active,160,15

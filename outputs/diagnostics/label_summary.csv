@@ -1,5 +1,5 @@
-label_col,split,definition,threshold,sample_count,n_classes,positive_rate,future_return_mean_all,future_return_mean_label_1,future_return_median_label_1
-label_round_trip_net,all,future_return > 2 * (commission_rate + slippage_rate),0.003,67705,2,0.18339856731408316,4.521621131556212e-05,0.008271744396799521,0.005673088287436512
-label_round_trip_net,train,future_return > 2 * (commission_rate + slippage_rate),0.003,47393,2,0.17051041293017957,-1.417629807374348e-05,0.007596649362389079,0.005439879947477078
-label_round_trip_net,valid,future_return > 2 * (commission_rate + slippage_rate),0.003,10156,2,0.1983064198503348,0.00020316507449710163,0.010324364874304517,0.006504791932596898
-label_round_trip_net,test,future_return > 2 * (commission_rate + slippage_rate),0.003,10156,2,0.22863332020480504,0.0001644226452477839,0.008840850913326532,0.006044243447457021
+label_col,split,definition,threshold,sample_count,n_classes,positive_rate,trade_return_mean_all,trade_return_mean_label_1,trade_return_median_label_1
+label_round_trip_net,all,trade_return > 2 * (commission_rate + slippage_rate),0.003,67704,2,0.1837409901926031,5.4377941441650973e-05,0.008129234074740099,0.0056707462159203414
+label_round_trip_net,train,trade_return > 2 * (commission_rate + slippage_rate),0.003,47392,2,0.17028190411883862,-3.4839497413036636e-06,0.007495281393649001,0.005434782608695676
+label_round_trip_net,valid,trade_return > 2 * (commission_rate + slippage_rate),0.003,10156,2,0.20086648286727057,0.00018811772940088373,0.01001299440592399,0.00647737662712633
+label_round_trip_net,test,trade_return > 2 * (commission_rate + slippage_rate),0.003,10156,2,0.22942103190232374,0.00019064511950669802,0.008675640538598477,0.006028759299093744
