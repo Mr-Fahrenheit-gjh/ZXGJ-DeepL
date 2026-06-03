@@ -1,0 +1,73 @@
+{
+  "model": "RandomForestClassifier",
+  "target_col": "label_round_trip_net",
+  "lookback_aligned_to_lstm": 32,
+  "feature_count": 194,
+  "train_sample_count": 47392,
+  "valid_sample_count": 10124,
+  "test_sample_count": 10124,
+  "train_positive_rate": 0.17028190411883862,
+  "valid_positive_rate": 0.20110628210193598,
+  "test_positive_rate": 0.2297510865270644,
+  "valid_auc": 0.6967892718407924,
+  "test_auc": 0.6393586048586657,
+  "test_acc_05": 0.5011853022520742,
+  "test_precision_05": 0.2867209520826809,
+  "test_recall_05": 0.7871883061049011,
+  "test_f1_05": 0.42033976124885214,
+  "pred_prob_mean": 0.5252546652429789,
+  "pred_prob_std": 0.12138767299756122,
+  "pred_prob_min": 0.11747273284770628,
+  "pred_prob_max": 0.7773719345191625,
+  "q80_threshold": 0.636675318402297,
+  "q90_threshold": 0.6646243827266717,
+  "top10_feature_importance": [
+    {
+      "feature": "bar_in_day_pct",
+      "importance": 0.045969405153057454
+    },
+    {
+      "feature": "parkinson_vol_5",
+      "importance": 0.04258709360609163
+    },
+    {
+      "feature": "bar_in_day",
+      "importance": 0.04024040165145995
+    },
+    {
+      "feature": "range_mean_10",
+      "importance": 0.03786454479352747
+    },
+    {
+      "feature": "range_mean_48",
+      "importance": 0.03574031146078537
+    },
+    {
+      "feature": "parkinson_vol_10",
+      "importance": 0.034132243965213034
+    },
+    {
+      "feature": "range_mean_5",
+      "importance": 0.03279223770200363
+    },
+    {
+      "feature": "parkinson_vol_48",
+      "importance": 0.028261258576675115
+    },
+    {
+      "feature": "bar_range",
+      "importance": 0.024829043187848458
+    },
+    {
+      "feature": "vol_48",
+      "importance": 0.024299668905783098
+    }
+  ],
+  "output_files": {
+    "predictions": "outputs\\diagnostics\\model_backtests\\randomforest\\rf_test_predictions.csv",
+    "group_analysis": "outputs\\diagnostics\\model_backtests\\randomforest\\rf_signal_group_analysis.csv",
+    "threshold_diagnostics": "outputs\\diagnostics\\model_backtests\\randomforest\\rf_signal_threshold_diagnostics.csv",
+    "probability_describe": "outputs\\diagnostics\\model_backtests\\randomforest\\rf_probability_describe.csv",
+    "feature_importance": "outputs\\diagnostics\\model_backtests\\randomforest\\rf_feature_importance.csv"
+  }
+}

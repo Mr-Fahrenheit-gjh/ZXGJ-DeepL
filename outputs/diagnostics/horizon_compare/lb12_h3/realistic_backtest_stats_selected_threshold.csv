@@ -1,0 +1,17 @@
+,0
+threshold,0.7749912738800048
+horizon,3
+round_trip_cost,0.003
+trade_count,138
+win_rate,0.35507246376811596
+gross_return_mean,0.00039154658395810837
+net_return_mean,-0.0026084534160418916
+gross_return_median,0.0005750607696357601
+net_return_median,-0.00242493923036424
+total_return,-0.3091765843813056
+max_drawdown,-0.3413320117509262
+sharpe,-24.031783683698325
+avg_pred_prob,0.7895574509233668
+positive_label_rate,0.35507246376811596
+selected_by,validation_net_return_mean
+selected_quantile,0.95
