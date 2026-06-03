@@ -1,0 +1,54 @@
+{
+  "status": "FAIL",
+  "live_gates": {
+    "reproducibility_clean_git": false,
+    "feature_leakage_passed": true,
+    "walk_forward_quality_passed": true,
+    "min_executed_folds": false,
+    "min_total_trades": false,
+    "positive_median_alpha_return": true,
+    "median_buy_auc_above_live_floor": true,
+    "median_sell_auc_above_live_floor": true,
+    "drawdown_within_live_limit": true,
+    "stress_alpha_positive": false,
+    "stress_drawdown_within_live_limit": true
+  },
+  "observed": {
+    "fold_count": 1,
+    "total_trades": 9,
+    "median_alpha_total_return": 0.0003877263900000649,
+    "median_test_buy_auc": 0.6145833333333334,
+    "median_test_sell_auc": 0.6427450980392156,
+    "median_max_drawdown": -0.0021974289680001258,
+    "stress_min_alpha_total_return": -0.004300797458499983,
+    "stress_worst_alpha_drawdown": -0.0047554364885000755
+  },
+  "quality_report": {
+    "gates": {
+      "min_folds": 1,
+      "min_total_trades": 1,
+      "min_median_test_buy_auc": 0.52,
+      "min_median_alpha_return": 0.0,
+      "max_median_drawdown": -0.08
+    },
+    "observed": {
+      "fold_count": 1,
+      "total_trades": 9,
+      "median_test_buy_auc": 0.6145833333333334,
+      "median_alpha_return": 0.0003877263900000649,
+      "median_max_drawdown": -0.0021974289680001258,
+      "drawdown_metric": "alpha_max_drawdown",
+      "return_metric": "alpha_total_return"
+    },
+    "checks": {
+      "enough_folds": true,
+      "enough_trades": true,
+      "buy_auc_above_gate": true,
+      "alpha_return_above_gate": true,
+      "drawdown_within_gate": true
+    },
+    "all_passed": true,
+    "note": "Research gate only. Passing this does not prove live-trading readiness."
+  },
+  "hard_rule": "No real capital deployment unless status == PASS and all artifacts are reviewed."
+}

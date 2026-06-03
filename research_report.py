@@ -17,6 +17,12 @@ def load_walk_forward_summary(output_dir: str | Path) -> tuple[dict, pd.DataFram
 def build_walk_forward_markdown_report(output_dir: str | Path) -> str:
     output_dir = Path(output_dir)
     summary, fold_summary = load_walk_forward_summary(output_dir)
+    parent_dir = output_dir.parent
+    live_readiness = None
+    readiness_path = parent_dir / "live_readiness_report.json"
+    if readiness_path.exists():
+        with readiness_path.open("r", encoding="utf-8") as f:
+            live_readiness = json.load(f)
     quality = summary.get("quality_report", {})
     checks = quality.get("checks", {})
     observed = quality.get("observed", {})
@@ -33,7 +39,10 @@ def build_walk_forward_markdown_report(output_dir: str | Path) -> str:
         f"- Median test sell AUC: {summary.get('median_test_sell_auc')}",
         f"- Median total return per fold: {summary.get('median_total_return')}",
         f"- Median alpha total return per fold: {summary.get('median_alpha_total_return')}",
+        f"- Stress min alpha total return: {summary.get('stress_min_alpha_total_return')}",
+        f"- Stress worst alpha drawdown: {summary.get('stress_worst_alpha_drawdown')}",
         f"- Quality gate passed: {quality.get('all_passed')}",
+        f"- Live readiness: {live_readiness.get('status') if live_readiness else 'not evaluated'}",
         "",
         "## Quality Gate Checks",
         "",
@@ -43,6 +52,25 @@ def build_walk_forward_markdown_report(output_dir: str | Path) -> str:
     lines.extend(["", "## Observed Metrics", ""])
     for key, value in observed.items():
         lines.append(f"- {key}: {value}")
+    if live_readiness:
+        lines.extend(["", "## Live Readiness Gates", ""])
+        for key, value in live_readiness.get("live_gates", {}).items():
+            lines.append(f"- {key}: {value}")
+        lines.extend(["", "## Live Readiness Observed", ""])
+        for key, value in live_readiness.get("observed", {}).items():
+            lines.append(f"- {key}: {value}")
+        execution_audit = live_readiness.get("execution_feasibility_audit")
+        if execution_audit:
+            lines.extend(["", "## Execution Feasibility", ""])
+            lines.append(f"- status: {execution_audit.get('status')}")
+            for key, value in execution_audit.get("observed", {}).items():
+                lines.append(f"- {key}: {value}")
+        shadow_report = live_readiness.get("shadow_monitoring_report")
+        if shadow_report:
+            lines.extend(["", "## Shadow Monitoring", ""])
+            lines.append(f"- status: {shadow_report.get('status')}")
+            for key, value in shadow_report.get("observed", {}).items():
+                lines.append(f"- {key}: {value}")
     lines.extend(["", "## Methodology", ""])
     for key, value in methodology.items():
         lines.append(f"- {key}: {value}")

@@ -50,7 +50,19 @@
 14. research_report.py
    将 walk-forward JSON/CSV 结果导出为 Markdown 研究报告。
 
-15. MVP.ipynb
+15. production_readiness.py
+   实盘前审计：数据/代码/config 指纹、特征泄漏审计、live readiness 硬门槛。
+
+16. live_monitoring.py
+   影子盘/纸面交易监控：特征 PSI、buy/sell 概率 PSI、影子盘收益、回撤、连续亏损、交易次数和胜率。
+
+17. execution_audit.py
+   A 股数据清洗和执行可行性审计：OHLCV 完整性、重复时间戳、零成交量、交易时段、短交易日和异常涨跌幅。
+
+18. verify_production_readiness.py
+   一键检查 pipeline 输出目录是否包含完整证据链，并导出 production_readiness_checks.csv。
+
+19. MVP.ipynb
    编排入口和结果展示，不再堆大段模型实现。
 ```
 
@@ -123,6 +135,27 @@ outputs/diagnostics/optuna/
 ```bash
 python run_research_pipeline.py --quick --output-dir outputs/diagnostics/research_pipeline_smoke_prepare
 python run_research_pipeline.py --quick --run-walk-forward --output-dir outputs/diagnostics/research_pipeline_smoke_inventory_t0_v2 --model-names logistic_regression random_forest --max-folds 2
+python verify_production_readiness.py outputs/diagnostics/research_pipeline_smoke_inventory_t0_v2
+```
+
+## 实盘硬门槛
+
+```text
+live_readiness_report.json 是最终硬否决文件。
+只有 status = PASS，才允许进入人工复核和小资金仿真阶段。
+FAIL 不是程序错误，而是“禁止实盘”的明确结论。
+
+当前 live gates 包括：
+1. 源代码工作区可复现，忽略 outputs/ 和 __pycache__ 等非源码产物。
+2. 特征泄漏审计通过。
+3. A 股数据和执行可行性审计通过。
+4. walk-forward 研究质量门槛通过。
+5. fold 数和交易数达到最低要求。
+6. buy/sell 外样本 AUC 超过 live floor。
+7. 中位 alpha 收益为正。
+8. 中位回撤在限制内。
+9. 压力测试下 alpha 仍为正且回撤可控。
+10. 影子盘监控通过；如果 `require_shadow_monitoring = True` 但没有 `shadow_monitoring_report.json`，则禁止实盘。
 ```
 
 ## 当前真实数据 quick smoke
@@ -151,5 +184,6 @@ Failed check = alpha_return_above_gate
 3. 加入更严格的盘口、涨跌停、停牌、成交量和冲击成本约束。
 4. 做多阈值、多仓位、多滑点、多成交量参与率压力测试。
 5. 与 vn.py / VeighNa 事件撮合回测交叉验证。
-6. 只有长期外样本 alpha 稳定为正、回撤可控，才可以讨论真实资金级别。
+6. 至少完成 20 个交易日以上影子盘，输出 `shadow_monitoring_report.json`。
+7. 只有长期外样本 alpha 稳定为正、影子盘通过、回撤可控，才可以讨论真实资金级别。
 ```

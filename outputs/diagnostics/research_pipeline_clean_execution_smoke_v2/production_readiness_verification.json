@@ -1,0 +1,8 @@
+{
+  "output_dir": "outputs/diagnostics/research_pipeline_clean_execution_smoke_v2",
+  "check_count": 28,
+  "passed_count": 28,
+  "all_checks_passed": true,
+  "live_readiness_status": "FAIL",
+  "note": "Verification checks artifact completeness and gate presence. It does not override live readiness."
+}

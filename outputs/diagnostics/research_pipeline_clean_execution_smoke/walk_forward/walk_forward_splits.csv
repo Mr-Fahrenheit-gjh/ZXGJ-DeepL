@@ -1,0 +1,2 @@
+fold,train_start_pos,train_end_pos,valid_start_pos,valid_end_pos,train_start,train_end,valid_start,valid_end,train_bars,valid_bars,expanding
+0,0,800,800,960,2020-07-23 09:35:00,2020-08-14 13:40:00,2020-08-14 13:45:00,2020-08-19 15:00:00,800,160,False

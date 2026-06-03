@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import datetime as dt
 import json
 from pathlib import Path
 
@@ -8,9 +9,24 @@ import numpy as np
 import pandas as pd
 
 from feature_engineering import build_basic_features, select_feature_columns
+from feature_engineering import make_sequence_data, split_time_series, standardize_by_train, winsorize_by_train
 from label_builder import build_path_dependent_opportunity_labels, summarize_opportunity_labels
+from execution_audit import audit_execution_feasibility, clean_market_data_for_execution
+from hyperparameter_optimization import run_optuna_sequence_search
 from mvp_config import build_mvp_config
+from production_readiness import (
+    audit_feature_leakage,
+    build_live_readiness_report,
+    collect_reproducibility_manifest,
+)
 from research_report import export_walk_forward_markdown_report
+from model_signals import (
+    train_dual_cnn_signals,
+    train_dual_lstm_signals,
+    train_dual_mlp_signals,
+    train_dual_transformer_lstm_signals,
+)
+from vnpy_backtest import export_dual_signal_file, run_vnpy_dual_signal_t0_backtest, check_vnpy_available
 from walk_forward_runner import run_walk_forward_signal_research
 
 
@@ -22,6 +38,8 @@ def _json_default(value):
         return value.item()
     if isinstance(value, Path):
         return str(value)
+    if isinstance(value, (dt.date, dt.datetime)):
+        return value.isoformat()
     if isinstance(value, pd.Timestamp):
         return value.isoformat()
     if pd.isna(value) if not isinstance(value, (list, tuple, dict, set)) else False:
@@ -64,6 +82,33 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--max-folds", type=int, default=None, help="Limit walk-forward folds.")
     parser.add_argument("--device", default=None, help="Torch device for deep sequence models.")
+    parser.add_argument(
+        "--full-model-suite",
+        action="store_true",
+        help="Run Transformer-LSTM, LSTM, CNN, MLP, random forest, and logistic regression.",
+    )
+    parser.add_argument(
+        "--run-optuna",
+        action="store_true",
+        help="Run optional Optuna hyperparameter search before walk-forward.",
+    )
+    parser.add_argument(
+        "--optuna-model",
+        default="transformer_lstm",
+        choices=["transformer_lstm", "lstm", "cnn", "mlp"],
+        help="Sequence model optimized by Optuna.",
+    )
+    parser.add_argument("--optuna-trials", type=int, default=None, help="Override Optuna trial count.")
+    parser.add_argument(
+        "--run-explainability",
+        action="store_true",
+        help="Export permutation, SHAP when available, and gradient importance inside walk-forward folds.",
+    )
+    parser.add_argument(
+        "--run-vnpy-backtest",
+        action="store_true",
+        help="Run optional vn.py event-driven backtest from selected walk-forward signals.",
+    )
     return parser.parse_args()
 
 
@@ -102,6 +147,7 @@ def build_pipeline_config(args: argparse.Namespace) -> dict:
                 "logit_max_iter": 500,
                 "max_epochs": 3,
                 "early_stop_patience": 2,
+                "optuna_n_trials": 2,
                 "quality_min_folds": 1,
                 "quality_min_total_trades": 1,
             }
@@ -110,9 +156,187 @@ def build_pipeline_config(args: argparse.Namespace) -> dict:
         overrides["walk_forward_max_folds"] = args.max_folds
     if args.model_names:
         overrides["walk_forward_model_names"] = args.model_names
+    if args.full_model_suite:
+        overrides["walk_forward_model_names"] = [
+            "transformer_lstm",
+            "lstm",
+            "cnn",
+            "mlp",
+            "random_forest",
+            "logistic_regression",
+        ]
+    if args.run_explainability:
+        overrides["run_explainability"] = True
+    if args.optuna_trials is not None:
+        overrides["optuna_n_trials"] = args.optuna_trials
     config = build_mvp_config(overrides)
     config["diagnostics_dir"] = str(Path(args.output_dir))
     return config
+
+
+def run_optuna_from_pipeline(
+    data: pd.DataFrame,
+    feature_cols: list[str],
+    config: dict,
+    model_name: str,
+    output_dir: Path,
+    device: str | None = None,
+):
+    train_df, valid_df, test_df = split_time_series(
+        data,
+        train_ratio=float(config.get("train_ratio", 0.70)),
+        valid_ratio=float(config.get("valid_ratio", 0.15)),
+    )
+    buy_target_col = config.get("buy_label_col", "buy_label")
+    sell_target_col = config.get("sell_label_col", "sell_label")
+    required = feature_cols + [buy_target_col, sell_target_col]
+    train_df = train_df.replace([np.inf, -np.inf], np.nan).dropna(subset=required).copy()
+    valid_df = valid_df.replace([np.inf, -np.inf], np.nan).dropna(subset=required).copy()
+    test_df = test_df.replace([np.inf, -np.inf], np.nan).dropna(subset=required).copy()
+    train_w, valid_w, test_w, _ = winsorize_by_train(
+        train_df,
+        valid_df,
+        test_df,
+        feature_cols,
+        lower_q=float(config.get("winsor_lower_q", 0.001)),
+        upper_q=float(config.get("winsor_upper_q", 0.999)),
+    )
+    train_scaled, valid_scaled, test_scaled, _ = standardize_by_train(train_w, valid_w, test_w, feature_cols)
+
+    lookback = int(config.get("lookback", 32))
+    x_train_seq, y_train_buy_seq, train_index_seq = make_sequence_data(train_scaled, feature_cols, buy_target_col, lookback)
+    x_valid_seq, y_valid_buy_seq, valid_index_seq = make_sequence_data(valid_scaled, feature_cols, buy_target_col, lookback)
+    x_test_seq, y_test_buy_seq, test_index_seq = make_sequence_data(test_scaled, feature_cols, buy_target_col, lookback)
+    _, y_train_sell_seq, _ = make_sequence_data(train_scaled, feature_cols, sell_target_col, lookback)
+    _, y_valid_sell_seq, _ = make_sequence_data(valid_scaled, feature_cols, sell_target_col, lookback)
+    _, y_test_sell_seq, _ = make_sequence_data(test_scaled, feature_cols, sell_target_col, lookback)
+
+    trainers = {
+        "transformer_lstm": train_dual_transformer_lstm_signals,
+        "lstm": train_dual_lstm_signals,
+        "cnn": train_dual_cnn_signals,
+        "mlp": train_dual_mlp_signals,
+    }
+    trainer = trainers[model_name]
+    trainer_kwargs = {
+        "x_train_seq": x_train_seq,
+        "y_train_buy_seq": y_train_buy_seq,
+        "y_train_sell_seq": y_train_sell_seq,
+        "x_valid_seq": x_valid_seq,
+        "y_valid_buy_seq": y_valid_buy_seq,
+        "y_valid_sell_seq": y_valid_sell_seq,
+        "x_test_seq": x_test_seq,
+        "y_test_buy_seq": y_test_buy_seq,
+        "y_test_sell_seq": y_test_sell_seq,
+        "valid_df": valid_scaled,
+        "test_df": test_scaled,
+        "valid_index_seq": valid_index_seq,
+        "test_index_seq": test_index_seq,
+        "device": device,
+    }
+    optuna_dir = output_dir / model_name
+    try:
+        study = run_optuna_sequence_search(
+            trainer=trainer,
+            model_name=model_name,
+            base_config=config,
+            trainer_kwargs=trainer_kwargs,
+            output_dir=optuna_dir,
+            n_trials=int(config.get("optuna_n_trials", 20)),
+            timeout=config.get("optuna_timeout_seconds"),
+        )
+    except ImportError as exc:
+        optuna_dir.mkdir(parents=True, exist_ok=True)
+        report = {
+            "status": "SKIPPED",
+            "model_name": model_name,
+            "reason": str(exc),
+            "install_hint": "pip install optuna",
+        }
+        with (optuna_dir / "optuna_report.json").open("w", encoding="utf-8") as f:
+            json.dump(report, f, ensure_ascii=False, indent=2, default=_json_default)
+        return report
+    report = {
+        "status": "PASS",
+        "model_name": model_name,
+        "best_value": float(study.best_value),
+        "best_params": study.best_params,
+        "best_trial_number": int(study.best_trial.number),
+    }
+    with (optuna_dir / "optuna_report.json").open("w", encoding="utf-8") as f:
+        json.dump(report, f, ensure_ascii=False, indent=2, default=_json_default)
+    return report
+
+
+def run_optional_vnpy_stage(
+    walk_forward_result: dict,
+    config: dict,
+    output_dir: Path,
+) -> dict:
+    vnpy_dir = output_dir / "vnpy_backtest"
+    vnpy_dir.mkdir(parents=True, exist_ok=True)
+    available, vnpy_info = check_vnpy_available()
+    report = {"available": bool(available), "vnpy_info": {k: str(v) for k, v in vnpy_info.items() if k not in {"Exchange", "Interval", "BarData", "get_database"}}}
+    if not available:
+        report["status"] = "SKIPPED"
+        report["reason"] = "vn.py core or vnpy_ctastrategy is unavailable in this environment"
+        with (vnpy_dir / "vnpy_backtest_report.json").open("w", encoding="utf-8") as f:
+            json.dump(report, f, ensure_ascii=False, indent=2, default=_json_default)
+        return report
+
+    fold_summary = walk_forward_result["fold_summary"]
+    if not len(fold_summary):
+        report.update({"status": "SKIPPED", "reason": "no walk-forward folds"})
+        with (vnpy_dir / "vnpy_backtest_report.json").open("w", encoding="utf-8") as f:
+            json.dump(report, f, ensure_ascii=False, indent=2, default=_json_default)
+        return report
+
+    best_row = fold_summary.sort_values("alpha_total_return", ascending=False).iloc[0]
+    fold_dir = Path(best_row["output_dir"])
+    model_name = str(best_row["selected_model"])
+    signal_path = fold_dir / "models" / model_name / "test_signals.csv"
+    if not signal_path.exists():
+        report.update({"status": "SKIPPED", "reason": f"missing selected signal file: {signal_path}"})
+        with (vnpy_dir / "vnpy_backtest_report.json").open("w", encoding="utf-8") as f:
+            json.dump(report, f, ensure_ascii=False, indent=2, default=_json_default)
+        return report
+
+    signal_df = pd.read_csv(signal_path, index_col=0, parse_dates=True)
+    exported_signal_path, exported_signal = export_dual_signal_file(
+        signal_df,
+        vnpy_dir / "dual_signal.csv",
+        buy_prob_col="buy_prob",
+        sell_prob_col="sell_prob",
+    )
+    engine, daily_result, stats = run_vnpy_dual_signal_t0_backtest(
+        vt_symbol=f"{config.get('symbol', '688981')}.SSE",
+        signal_path=exported_signal_path,
+        signal_df=signal_df,
+        buy_threshold=float(best_row["buy_threshold"]),
+        sell_threshold=float(best_row["sell_threshold"]),
+        vnpy_info=vnpy_info,
+        fixed_size=int(config.get("min_lot_size", 100)),
+        capital=float(config.get("initial_capital", 1_000_000)),
+        commission_rate=float(config.get("commission_rate", 0.001)),
+        slippage_abs=float(config.get("slippage_abs", 0.05)),
+        stop_loss_pct=float(config.get("sl", 0.002)),
+        take_profit_pct=float(config.get("tp", 0.003)),
+    )
+    if len(daily_result):
+        daily_result.to_csv(vnpy_dir / "vnpy_daily_result.csv")
+    report.update(
+        {
+            "status": "PASS" if stats else "SKIPPED",
+            "selected_fold": int(best_row["fold"]),
+            "selected_model": model_name,
+            "signal_file": str(exported_signal_path),
+            "signal_count": int(len(exported_signal)),
+            "stats": stats,
+        }
+    )
+    with (vnpy_dir / "vnpy_backtest_report.json").open("w", encoding="utf-8") as f:
+        json.dump(report, f, ensure_ascii=False, indent=2, default=_json_default)
+    return report
 
 
 def prepare_research_dataset(raw_df: pd.DataFrame, config: dict) -> tuple[pd.DataFrame, list[str], dict]:
@@ -160,9 +384,11 @@ def export_pipeline_manifest(
     args: argparse.Namespace,
     config: dict,
     raw_df: pd.DataFrame,
+    market_df: pd.DataFrame,
     prepared_df: pd.DataFrame,
     feature_cols: list[str],
     metadata: dict,
+    cleaning_report: dict,
 ) -> None:
     output_dir.mkdir(parents=True, exist_ok=True)
     pd.Series(feature_cols, name="feature").to_csv(output_dir / "feature_cols.csv", index=False)
@@ -170,17 +396,37 @@ def export_pipeline_manifest(
     pd.DataFrame(metadata["label_reason_distribution"]).to_csv(
         output_dir / "label_reason_distribution.csv", index=False
     )
+    leakage_audit = audit_feature_leakage(feature_cols, output_dir)
+    execution_audit = audit_execution_feasibility(market_df, config, output_dir)
+    reproducibility_manifest = collect_reproducibility_manifest(
+        data_path=args.data_path,
+        config=config,
+        output_dir=output_dir,
+        extra_files=["production_readiness.py", "research_report.py", "execution_audit.py"],
+    )
     with open(output_dir / "run_config.json", "w", encoding="utf-8") as f:
         json.dump(config, f, ensure_ascii=False, indent=2, default=_json_default)
     manifest = {
         "data_path": str(args.data_path),
         "raw_shape": list(raw_df.shape),
+        "cleaned_market_shape": list(market_df.shape),
         "prepared_shape": list(prepared_df.shape),
         "index_start": str(prepared_df.index.min()),
         "index_end": str(prepared_df.index.max()),
         "feature_count": len(feature_cols),
         "run_walk_forward": bool(args.run_walk_forward),
         "quick": bool(args.quick),
+        "feature_leakage_audit": leakage_audit,
+        "market_data_cleaning_report": cleaning_report,
+        "execution_feasibility_audit": execution_audit,
+        "reproducibility_manifest": {
+            "data_sha256": reproducibility_manifest.get("data_sha256"),
+            "config_sha256": reproducibility_manifest.get("config_sha256"),
+            "source_bundle_sha256": reproducibility_manifest.get("source_bundle_sha256"),
+            "git_commit": reproducibility_manifest.get("git_commit"),
+            "git_branch": reproducibility_manifest.get("git_branch"),
+            "git_dirty": reproducibility_manifest.get("git_dirty"),
+        },
         "methodology": {
             "numeric_conversion": "open/high/low/close/volume/amount are coerced to numeric before feature engineering",
             "feature_engineering": "feature_engineering.build_basic_features and select_feature_columns",
@@ -198,10 +444,21 @@ def main() -> None:
     config = build_pipeline_config(args)
 
     raw_df = load_market_data(args.data_path)
-    prepared_df, feature_cols, metadata = prepare_research_dataset(raw_df, config)
-    export_pipeline_manifest(output_dir, args, config, raw_df, prepared_df, feature_cols, metadata)
+    market_df, cleaning_report = clean_market_data_for_execution(raw_df, config, output_dir)
+    prepared_df, feature_cols, metadata = prepare_research_dataset(market_df, config)
+    export_pipeline_manifest(output_dir, args, config, raw_df, market_df, prepared_df, feature_cols, metadata, cleaning_report)
     if args.save_prepared_data:
         prepared_df.to_parquet(output_dir / "prepared_research_dataset.parquet")
+
+    if args.run_optuna:
+        run_optuna_from_pipeline(
+            data=prepared_df,
+            feature_cols=feature_cols,
+            config=config,
+            model_name=args.optuna_model,
+            output_dir=output_dir / "optuna",
+            device=args.device,
+        )
 
     if args.run_walk_forward:
         walk_forward_result = run_walk_forward_signal_research(
@@ -212,10 +469,27 @@ def main() -> None:
             model_names=config.get("walk_forward_model_names"),
             device=args.device,
         )
+        with open(output_dir / "reproducibility_manifest.json", "r", encoding="utf-8") as f:
+            reproducibility_manifest = json.load(f)
+        with open(output_dir / "feature_leakage_audit.json", "r", encoding="utf-8") as f:
+            leakage_audit = json.load(f)
+        readiness_report = build_live_readiness_report(
+            walk_forward_dir=walk_forward_result["output_dir"],
+            leakage_audit=leakage_audit,
+            reproducibility_manifest=reproducibility_manifest,
+            config=config,
+            output_dir=output_dir,
+        )
         report_path = export_walk_forward_markdown_report(walk_forward_result["output_dir"])
+        if args.run_vnpy_backtest:
+            vnpy_report = run_optional_vnpy_stage(walk_forward_result, config, output_dir)
+            print("vn.py backtest:")
+            print(json.dumps(vnpy_report, ensure_ascii=False, indent=2, default=_json_default))
         print("Walk-forward summary:")
         print(json.dumps(walk_forward_result["aggregate_summary"], ensure_ascii=False, indent=2, default=_json_default))
         print(f"Walk-forward report: {report_path}")
+        print("Live readiness:")
+        print(json.dumps(readiness_report, ensure_ascii=False, indent=2, default=_json_default))
     else:
         print("Prepared research dataset only. Add --run-walk-forward to train and backtest.")
 

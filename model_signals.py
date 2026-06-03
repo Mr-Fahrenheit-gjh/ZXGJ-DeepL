@@ -381,6 +381,7 @@ class TransformerLSTMSequenceClassifier(nn.Module):
             norm_first=True,
         )
         self.transformer = nn.TransformerEncoder(encoder_layer, num_layers=transformer_layers)
+        self.residual_norm = nn.LayerNorm(d_model)
         self.lstm = nn.LSTM(
             input_size=d_model,
             hidden_size=lstm_hidden_dim,
@@ -406,8 +407,9 @@ class TransformerLSTMSequenceClassifier(nn.Module):
         nn.init.constant_(self.fc.bias, 0)
 
     def forward(self, x):
-        h = self.input_norm(self.input_proj(x))
-        h = self.transformer(h)
+        h0 = self.input_norm(self.input_proj(x))
+        h = self.transformer(h0)
+        h = self.residual_norm(h + h0)
         out, _ = self.lstm(h)
         last_hidden = self.dropout(out[:, -1, :])
         logits = self.fc(last_hidden)

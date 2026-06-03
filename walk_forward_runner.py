@@ -8,6 +8,12 @@ import pandas as pd
 
 from ensemble import build_ensemble_signal_result
 from feature_engineering import make_sequence_data, standardize_by_train, winsorize_by_train
+from explainability import (
+    compute_permutation_importance_binary,
+    compute_torch_gradient_importance,
+    export_model_explainability,
+    try_compute_shap_summary,
+)
 from model_signals import (
     train_dual_cnn_signals,
     train_dual_logistic_signals,
@@ -16,7 +22,12 @@ from model_signals import (
     train_dual_random_forest_signals,
     train_dual_transformer_lstm_signals,
 )
-from risk_management import export_t0_backtest_result, run_a_share_inventory_t0_backtest, run_t0_dual_signal_backtest
+from risk_management import (
+    export_t0_backtest_result,
+    run_a_share_inventory_t0_backtest,
+    run_inventory_t0_stress_grid,
+    run_t0_dual_signal_backtest,
+)
 from validation import build_walk_forward_splits, export_walk_forward_splits
 
 
@@ -28,6 +39,9 @@ MODEL_TRAINERS = {
     "cnn": train_dual_cnn_signals,
     "mlp": train_dual_mlp_signals,
 }
+
+SKLEARN_MODEL_NAMES = {"logistic_regression", "random_forest"}
+TORCH_MODEL_NAMES = {"transformer_lstm", "lstm", "cnn", "mlp"}
 
 
 def _json_default(value):
@@ -247,6 +261,88 @@ def evaluate_quality_gates(fold_summary: pd.DataFrame, config: dict) -> dict:
     }
 
 
+def _export_fold_explainability(
+    model_results: dict[str, dict],
+    fold_data: dict,
+    feature_cols: list[str],
+    config: dict,
+    output_dir: Path,
+    device: str | None,
+) -> dict:
+    output_dir.mkdir(parents=True, exist_ok=True)
+    top_n = int(config.get("explainability_top_features", 30))
+    n_repeats = int(config.get("permutation_repeats", 3))
+    max_shap_samples = int(config.get("shap_max_samples", 512))
+    max_gradient_samples = int(config.get("gradient_max_samples", 1024))
+
+    permutation_results = {}
+    shap_results = {}
+    gradient_results = {}
+
+    for model_name, result in model_results.items():
+        safe_name = model_name.lower().replace(" ", "_")
+        if model_name in SKLEARN_MODEL_NAMES:
+            test_index = pd.to_datetime(fold_data["test_index_seq"])
+            x_test = fold_data["test_scaled"].loc[test_index, feature_cols]
+            y_test_buy = fold_data["test_scaled"].loc[test_index, config.get("buy_label_col", "buy_label")]
+            y_test_sell = fold_data["test_scaled"].loc[test_index, config.get("sell_label_col", "sell_label")]
+            permutation_results[f"{safe_name}_buy"] = compute_permutation_importance_binary(
+                result["buy_model"],
+                x_test,
+                y_test_buy,
+                feature_cols,
+                n_repeats=n_repeats,
+                random_state=int(config.get("random_state", 42)),
+            ).head(top_n)
+            permutation_results[f"{safe_name}_sell"] = compute_permutation_importance_binary(
+                result["sell_model"],
+                x_test,
+                y_test_sell,
+                feature_cols,
+                n_repeats=n_repeats,
+                random_state=int(config.get("random_state", 42)),
+            ).head(top_n)
+            shap_results[f"{safe_name}_buy"] = try_compute_shap_summary(
+                result["buy_model"],
+                x_test,
+                feature_cols,
+                max_samples=max_shap_samples,
+            )
+            shap_results[f"{safe_name}_sell"] = try_compute_shap_summary(
+                result["sell_model"],
+                x_test,
+                feature_cols,
+                max_samples=max_shap_samples,
+            )
+        elif model_name in TORCH_MODEL_NAMES:
+            gradient_results[f"{safe_name}_buy"] = compute_torch_gradient_importance(
+                result["buy_model"],
+                fold_data["x_test_seq"],
+                feature_cols,
+                device=device or result["summary"].get("buy_fit", {}).get("device", "cpu"),
+                max_samples=max_gradient_samples,
+            ).head(top_n)
+            gradient_results[f"{safe_name}_sell"] = compute_torch_gradient_importance(
+                result["sell_model"],
+                fold_data["x_test_seq"],
+                feature_cols,
+                device=device or result["summary"].get("sell_fit", {}).get("device", "cpu"),
+                max_samples=max_gradient_samples,
+            ).head(top_n)
+
+    return export_model_explainability(
+        output_dir=output_dir,
+        summary={
+            "model_count": len(model_results),
+            "models": list(model_results.keys()),
+            "top_features": top_n,
+            "permutation_repeats": n_repeats,
+            "note": "Permutation and SHAP are computed for sklearn models; gradient importance is computed for torch sequence models.",
+        },
+        permutation_results=permutation_results,
+        gradient_results=gradient_results,
+        shap_results=shap_results,
+    )
 def run_walk_forward_signal_research(
     data: pd.DataFrame,
     feature_cols: list[str],
@@ -319,6 +415,17 @@ def run_walk_forward_signal_research(
         else:
             selected_model_name, signal_result = next(iter(model_results.items()))
 
+        explainability_manifest = None
+        if config.get("run_explainability", False):
+            explainability_manifest = _export_fold_explainability(
+                model_results=model_results,
+                fold_data=fold_data,
+                feature_cols=feature_cols,
+                config=config,
+                output_dir=fold_dir / "explainability",
+                device=device,
+            )
+
         buy_threshold = float(signal_result["valid_signals"]["buy_prob"].quantile(config.get("fixed_threshold_quantile", 0.95)))
         sell_threshold = float(signal_result["valid_signals"]["sell_prob"].quantile(config.get("fixed_threshold_quantile", 0.95)))
         if config.get("a_share_t0_mode", "inventory") == "inventory":
@@ -336,6 +443,28 @@ def run_walk_forward_signal_research(
                 config=config,
             )
         export_t0_backtest_result(fold_dir / "t0_backtest", trades, equity, stats)
+        if config.get("a_share_t0_mode", "inventory") == "inventory":
+            stress_df = run_inventory_t0_stress_grid(
+                signal_result["test_signals"],
+                buy_threshold=buy_threshold,
+                sell_threshold=sell_threshold,
+                config=config,
+                output_dir=fold_dir / "stress_tests",
+            )
+            stress_stats = {
+                "stress_scenario_count": int(len(stress_df)),
+                "stress_min_alpha_total_return": float(stress_df["alpha_total_return"].min()) if "alpha_total_return" in stress_df and len(stress_df) else np.nan,
+                "stress_worst_alpha_drawdown": float(stress_df["alpha_max_drawdown"].min()) if "alpha_max_drawdown" in stress_df and len(stress_df) else np.nan,
+                "stress_min_trade_count": int(stress_df["trade_count"].min()) if "trade_count" in stress_df and len(stress_df) else 0,
+            }
+        else:
+            stress_df = pd.DataFrame()
+            stress_stats = {
+                "stress_scenario_count": 0,
+                "stress_min_alpha_total_return": np.nan,
+                "stress_worst_alpha_drawdown": np.nan,
+                "stress_min_trade_count": 0,
+            }
 
         row = {
             "fold": fold,
@@ -352,6 +481,7 @@ def run_walk_forward_signal_research(
             "valid_buy_auc": signal_result["summary"].get("valid_buy_auc", np.nan),
             "valid_sell_auc": signal_result["summary"].get("valid_sell_auc", np.nan),
             **stats,
+            **stress_stats,
             "output_dir": str(fold_dir),
         }
         fold_rows.append(row)
@@ -361,6 +491,8 @@ def run_walk_forward_signal_research(
                 "model_summaries": {name: result["summary"] for name, result in model_results.items()},
                 "selected_model_summary": signal_result["summary"],
                 "t0_stats": stats,
+                "stress_stats": stress_stats,
+                "explainability_manifest": explainability_manifest,
                 "output_dir": str(fold_dir),
             }
         )
@@ -383,6 +515,8 @@ def run_walk_forward_signal_research(
         "mean_test_sell_auc": float(fold_summary["test_sell_auc"].mean()) if len(fold_summary) else np.nan,
         "median_test_sell_auc": float(fold_summary["test_sell_auc"].median()) if len(fold_summary) else np.nan,
         "total_trades": int(fold_summary["trade_count"].sum()) if len(fold_summary) else 0,
+        "stress_min_alpha_total_return": float(fold_summary["stress_min_alpha_total_return"].min()) if "stress_min_alpha_total_return" in fold_summary and len(fold_summary) else np.nan,
+        "stress_worst_alpha_drawdown": float(fold_summary["stress_worst_alpha_drawdown"].min()) if "stress_worst_alpha_drawdown" in fold_summary and len(fold_summary) else np.nan,
         "quality_report": quality_report,
         "methodology": {
             "split_policy": "chronological walk-forward by bar position; no random shuffle",
@@ -393,6 +527,7 @@ def run_walk_forward_signal_research(
             "execution_policy": "signal at bar t, execute at next bar open with commission, slippage, lot size, no-overlap state machine, tp/sl and no-overnight handling",
             "a_share_t0_policy": "default inventory mode starts with tradable base shares; same-day sells use existing inventory, buybacks restore inventory, and buy-first exits sell old inventory rather than same-day purchases",
             "liquidity_policy": "single trade size is capped by max_participation_rate of next-bar volume when volume is available",
+            "explainability_policy": "optional per-fold permutation/SHAP for sklearn models and input-gradient importance for torch sequence models",
         },
     }
     with open(output_dir / "walk_forward_summary.json", "w", encoding="utf-8") as f:

@@ -1,0 +1,6 @@
+{
+  "status": "SKIPPED",
+  "model_name": "mlp",
+  "reason": "Install optuna to run hyperparameter optimization.",
+  "install_hint": "pip install optuna"
+}

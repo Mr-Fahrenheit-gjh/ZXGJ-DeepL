@@ -1,0 +1,42 @@
+{
+  "available": true,
+  "vnpy_info": {
+    "vnpy_ctastrategy": "True",
+    "core": "True"
+  },
+  "status": "PASS",
+  "selected_fold": 0,
+  "selected_model": "auc_weighted_ensemble",
+  "signal_file": "outputs/diagnostics/research_pipeline_topic_closure_smoke/vnpy_backtest/dual_signal.csv",
+  "signal_count": 152,
+  "stats": {
+    "start_date": "2020-08-14",
+    "end_date": "2020-08-19",
+    "total_days": 4,
+    "profit_days": 0,
+    "loss_days": 4,
+    "capital": 1000000.0,
+    "end_balance": 999487.625,
+    "max_drawdown": -496.8170000000391,
+    "max_ddpercent": -0.04968247295991822,
+    "max_drawdown_duration": 5,
+    "total_net_pnl": -512.3750000000005,
+    "daily_net_pnl": -128.0937500000001,
+    "total_commission": 156.375,
+    "daily_commission": 39.09375,
+    "total_slippage": 105.0,
+    "daily_slippage": 26.25,
+    "total_turnover": 156375.0,
+    "daily_turnover": 39093.75,
+    "total_trade_count": 21,
+    "daily_trade_count": 5.25,
+    "total_return": -0.051237500000000935,
+    "annual_return": -3.074250000000056,
+    "daily_return": -0.01281265772312785,
+    "return_std": 0.00944154312468176,
+    "sharpe_ratio": -21.02334727576754,
+    "ewm_sharpe": -21.111054569371817,
+    "return_drawdown_ratio": -1.031299308336307,
+    "rgr_ratio": -21.669748629963387
+  }
+}

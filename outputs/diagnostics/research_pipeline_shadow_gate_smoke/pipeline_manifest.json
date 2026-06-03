@@ -1,0 +1,46 @@
+{
+  "data_path": "688981_5min_20200716-20260602.parquet",
+  "raw_shape": [
+    68304,
+    8
+  ],
+  "prepared_shape": [
+    67705,
+    250
+  ],
+  "index_start": "2020-07-23 09:35:00",
+  "index_end": "2026-06-01 14:45:00",
+  "feature_count": 194,
+  "run_walk_forward": true,
+  "quick": true,
+  "feature_leakage_audit": {
+    "feature_count": 194,
+    "forbidden_keywords": [
+      "future",
+      "label",
+      "target",
+      "next",
+      "hit",
+      "exit_reason",
+      "exit_price",
+      "exit_bar"
+    ],
+    "suspicious_feature_count": 0,
+    "suspicious_features": [],
+    "passed": true
+  },
+  "reproducibility_manifest": {
+    "data_sha256": "bc925d336dea3bf61c6399f8985aefb5437958fe845c1866bc26fbef2f297d0e",
+    "config_sha256": "5e55f384491dcab96860bf3e824b1e437f648e78ce4602d8d1f6985519cfa473",
+    "source_bundle_sha256": "f60b6ad2f636c599ec9ebb4c00d0b9f85dc0c7183a63636bbc52c92ff5be78e8",
+    "git_commit": "9bdef723f57e8f36bcc4a0462a70f4e084c36520",
+    "git_branch": "main",
+    "git_dirty": true
+  },
+  "methodology": {
+    "numeric_conversion": "open/high/low/close/volume/amount are coerced to numeric before feature engineering",
+    "feature_engineering": "feature_engineering.build_basic_features and select_feature_columns",
+    "labeling": "path-dependent buy/sell opportunity labels with tp/sl/cost from MVP_CONFIG",
+    "validation": "optional walk-forward subtrain/calibration/out-of-sample test via walk_forward_runner"
+  }
+}

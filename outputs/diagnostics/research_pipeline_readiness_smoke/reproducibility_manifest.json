@@ -1,0 +1,23 @@
+{
+  "data_path": "688981_5min_20200716-20260602.parquet",
+  "data_sha256": "bc925d336dea3bf61c6399f8985aefb5437958fe845c1866bc26fbef2f297d0e",
+  "config_sha256": "316cc9bf99679615c93e786ab2d6b74cbf8eb3dc0515caf9caf3e033d8a3f9f7",
+  "source_hashes": {
+    "mvp_config.py": "fe6e2ec9e5f262b331d79c2840aea04850f787179785f91cd1afc575eeb5ef33",
+    "feature_engineering.py": "781e1fc5b290fe90f488b33320881e597499a92c1c4623cdf1f7c3801b808a87",
+    "label_builder.py": "8ca1cafa6a77bc1addb03e518c5d9db14f1453da745f43271ad8d565ccf5be15",
+    "model_signals.py": "3eca780fd15c1997b5fb6b5fcf7d72d3cb201427452e88a09e64cfe6f638a333",
+    "ensemble.py": "79eb14e59282a01226eb08433f0c878df77804181f32d7a7cf1b4b2ff85b33f6",
+    "risk_management.py": "dca36a42e3eec4b62ef20ff3981a38b9b64f0036e0b573275d540444cccbf10a",
+    "validation.py": "a8913ac2b3cdd7323a7e2ee5975d553fa8c9ce9a3ed73c2ac8c016750077b02b",
+    "walk_forward_runner.py": "91f3078c33fd8cfcb2c9a2773de14b5ebbdab29e7d9c2ebcd5df736e7844c396",
+    "run_research_pipeline.py": "da1753bf8d6dfc0e44adcb73d47d6d8b49ef2f56e03059ed7cada56b6dace45e",
+    "production_readiness.py": "92d0a710f310bc8deb98ca281a7ea74ff7c5b494ab4c9059351ef733c0521ae4",
+    "research_report.py": "ee662eaed4a4536a6492d8a6260c26f1eb91ddf967b8990198481e45a246bac7"
+  },
+  "source_bundle_sha256": "3c3c7e6e44bbae28d7a1d2fc4d09946b70f91186a659cf26201a704371322083",
+  "git_commit": "9bdef723f57e8f36bcc4a0462a70f4e084c36520",
+  "git_branch": "main",
+  "git_status_short": "D __pycache__/vnpy_backtest_mvp.cpython-313.pyc\n M mvp_config.py\n M risk_management.py\n M run_research_pipeline.py\n M walk_forward_runner.py\n?? __pycache__/diagnostics.cpython-313.pyc\n?? __pycache__/ensemble.cpython-313.pyc\n?? __pycache__/explainability.cpython-313.pyc\n?? __pycache__/feature_engineering.cpython-313.pyc\n?? __pycache__/hyperparameter_optimization.cpython-313.pyc\n?? __pycache__/label_builder.cpython-313.pyc\n?? __pycache__/model_signals.cpython-313.pyc\n?? __pycache__/mvp_config.cpython-313.pyc\n?? __pycache__/mvp_experiments.cpython-313.pyc\n?? __pycache__/production_readiness.cpython-313.pyc\n?? __pycache__/research_report.cpython-313.pyc\n?? __pycache__/risk_management.cpython-313.pyc\n?? __pycache__/run_research_pipeline.cpython-313.pyc\n?? __pycache__/validation.cpython-313.pyc\n?? __pycache__/vnpy_backtest.cpython-313.pyc\n?? __pycache__/walk_forward_runner.cpython-313.pyc\n?? outputs/diagnostics/research_pipeline_readiness_smoke/\n?? production_readiness.py",
+  "git_dirty": true
+}

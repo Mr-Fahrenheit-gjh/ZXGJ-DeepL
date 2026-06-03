@@ -1,0 +1,7 @@
+model,side,valid_auc,raw_weight,weight,weight_method
+transformer_lstm,sell,0.5061712010617121,0.006171201061712095,0.08274021352313267,valid_auc_edge_over_0p5
+lstm,sell,0.5226277372262773,0.02262773722627731,0.3033807829181482,valid_auc_edge_over_0p5
+cnn,sell,0.47047113470471136,0.0,0.0,valid_auc_edge_over_0p5
+mlp,sell,0.5262110152621102,0.026211015262110227,0.35142348754448444,valid_auc_edge_over_0p5
+random_forest,sell,0.5195753151957532,0.019575315195753173,0.2624555160142347,valid_auc_edge_over_0p5
+logistic_regression,sell,0.3885865958858659,0.0,0.0,valid_auc_edge_over_0p5

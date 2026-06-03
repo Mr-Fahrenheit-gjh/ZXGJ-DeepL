@@ -1,0 +1,18 @@
+{
+  "summary": {
+    "model_count": 2,
+    "models": [
+      "logistic_regression",
+      "random_forest"
+    ],
+    "top_features": 30,
+    "permutation_repeats": 3,
+    "note": "Permutation and SHAP are computed for sklearn models; gradient importance is computed for torch sequence models."
+  },
+  "files": {
+    "logistic_regression_buy_permutation_importance": "outputs/diagnostics/research_pipeline_topic_closure_smoke/walk_forward/fold_000/explainability/logistic_regression_buy_permutation_importance.csv",
+    "logistic_regression_sell_permutation_importance": "outputs/diagnostics/research_pipeline_topic_closure_smoke/walk_forward/fold_000/explainability/logistic_regression_sell_permutation_importance.csv",
+    "random_forest_buy_permutation_importance": "outputs/diagnostics/research_pipeline_topic_closure_smoke/walk_forward/fold_000/explainability/random_forest_buy_permutation_importance.csv",
+    "random_forest_sell_permutation_importance": "outputs/diagnostics/research_pipeline_topic_closure_smoke/walk_forward/fold_000/explainability/random_forest_sell_permutation_importance.csv"
+  }
+}

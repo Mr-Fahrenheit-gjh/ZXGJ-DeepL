@@ -1,0 +1,31 @@
+{
+  "data_path": "688981_5min_20200716-20260602.parquet",
+  "data_sha256": "bc925d336dea3bf61c6399f8985aefb5437958fe845c1866bc26fbef2f297d0e",
+  "config_sha256": "6d06c69954eb408e06379b2ad11d14b96f3531a4c31d932592200a9a343bbb60",
+  "source_hashes": {
+    "mvp_config.py": "14f9a3ac396b3c10826794047b1d53a73d2c5c34b7db5d31d94afd1ebced88fc",
+    "feature_engineering.py": "781e1fc5b290fe90f488b33320881e597499a92c1c4623cdf1f7c3801b808a87",
+    "label_builder.py": "8ca1cafa6a77bc1addb03e518c5d9db14f1453da745f43271ad8d565ccf5be15",
+    "model_signals.py": "3eca780fd15c1997b5fb6b5fcf7d72d3cb201427452e88a09e64cfe6f638a333",
+    "ensemble.py": "79eb14e59282a01226eb08433f0c878df77804181f32d7a7cf1b4b2ff85b33f6",
+    "risk_management.py": "dca36a42e3eec4b62ef20ff3981a38b9b64f0036e0b573275d540444cccbf10a",
+    "live_monitoring.py": "b8ee3a2a15a25b8f245cded75e4f21e36f5c50afdabfca88ed3006c946dcfe50",
+    "execution_audit.py": "5c906108bb9eac0000e3a4af9c2d2c807e8d8fde5c5e008dd061cffad30e4f22",
+    "validation.py": "a8913ac2b3cdd7323a7e2ee5975d553fa8c9ce9a3ed73c2ac8c016750077b02b",
+    "walk_forward_runner.py": "91f3078c33fd8cfcb2c9a2773de14b5ebbdab29e7d9c2ebcd5df736e7844c396",
+    "run_research_pipeline.py": "3a179fc8037277828db1b839db319de5af956a1e77ce43f09c5d40065165106b",
+    "production_readiness.py": "bcb3d6b4a7c1550cf82b412a259828d7a421279d35201da242d36de271dd7da8",
+    "research_report.py": "e473eb988457c93362d7a467e52dfbd1c8864c410259f371b3ea265866900a25"
+  },
+  "source_bundle_sha256": "1e9de37297a6848fa904d93b57bbb83ccf16f1123a63d160c247d01b386e702d",
+  "git_commit": "9bdef723f57e8f36bcc4a0462a70f4e084c36520",
+  "git_branch": "main",
+  "git_status_short": "M \"MVP\\346\\250\\241\\345\\235\\227\\345\\214\\226\\350\\257\\264\\346\\230\\216.md\"\n D __pycache__/vnpy_backtest_mvp.cpython-313.pyc\n M mvp_config.py\n M research_report.py\n M risk_management.py\n M run_research_pipeline.py\n M walk_forward_runner.py\n?? __pycache__/ensemble.cpython-313.pyc\n?? __pycache__/execution_audit.cpython-313.pyc\n?? __pycache__/feature_engineering.cpython-313.pyc\n?? __pycache__/label_builder.cpython-313.pyc\n?? __pycache__/model_signals.cpython-313.pyc\n?? __pycache__/mvp_config.cpython-313.pyc\n?? __pycache__/production_readiness.cpython-313.pyc\n?? __pycache__/research_report.cpython-313.pyc\n?? __pycache__/risk_management.cpython-313.pyc\n?? __pycache__/run_research_pipeline.cpython-313.pyc\n?? __pycache__/validation.cpython-313.pyc\n?? __pycache__/verify_production_readiness.cpython-313.pyc\n?? __pycache__/walk_forward_runner.cpython-313.pyc\n?? execution_audit.py\n?? live_monitoring.py\n?? outputs/diagnostics/research_pipeline_clean_execution_smoke/\n?? outputs/diagnostics/research_pipeline_execution_audit_smoke/\n?? outputs/diagnostics/research_pipeline_readiness_smoke/\n?? outputs/diagnostics/research_pipeline_readiness_smoke_v2/\n?? outputs/diagnostics/research_pipeline_shadow_gate_smoke/\n?? production_readiness.py\n?? verify_production_readiness.py",
+  "git_dirty": true,
+  "source_git_dirty": true,
+  "non_source_dirty_ignored_for_live_gate": [
+    "outputs/",
+    "__pycache__/",
+    ".ipynb_checkpoints/"
+  ]
+}

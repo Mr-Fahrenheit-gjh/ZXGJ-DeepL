@@ -1,0 +1,29 @@
+check,passed,detail
+root_file_exists:pipeline_manifest.json,True,outputs/diagnostics/research_pipeline_topic_closure_smoke/pipeline_manifest.json
+root_file_exists:run_config.json,True,outputs/diagnostics/research_pipeline_topic_closure_smoke/run_config.json
+root_file_exists:feature_cols.csv,True,outputs/diagnostics/research_pipeline_topic_closure_smoke/feature_cols.csv
+root_file_exists:feature_leakage_audit.json,True,outputs/diagnostics/research_pipeline_topic_closure_smoke/feature_leakage_audit.json
+root_file_exists:market_data_cleaning_report.json,True,outputs/diagnostics/research_pipeline_topic_closure_smoke/market_data_cleaning_report.json
+root_file_exists:execution_feasibility_audit.json,True,outputs/diagnostics/research_pipeline_topic_closure_smoke/execution_feasibility_audit.json
+root_file_exists:reproducibility_manifest.json,True,outputs/diagnostics/research_pipeline_topic_closure_smoke/reproducibility_manifest.json
+root_file_exists:live_readiness_report.json,True,outputs/diagnostics/research_pipeline_topic_closure_smoke/live_readiness_report.json
+walk_forward_file_exists:walk_forward_summary.json,True,outputs/diagnostics/research_pipeline_topic_closure_smoke/walk_forward/walk_forward_summary.json
+walk_forward_file_exists:walk_forward_fold_summary.csv,True,outputs/diagnostics/research_pipeline_topic_closure_smoke/walk_forward/walk_forward_fold_summary.csv
+walk_forward_file_exists:walk_forward_report.md,True,outputs/diagnostics/research_pipeline_topic_closure_smoke/walk_forward/walk_forward_report.md
+walk_forward_file_exists:methodology.json,True,outputs/diagnostics/research_pipeline_topic_closure_smoke/walk_forward/methodology.json
+walk_forward_file_exists:walk_forward_splits.csv,True,outputs/diagnostics/research_pipeline_topic_closure_smoke/walk_forward/walk_forward_splits.csv
+feature_leakage_audit_passed,True,suspicious_feature_count=0
+execution_feasibility_audit_passed,True,"{'row_count': 67968, 'trade_day_count': 1416, 'missing_required_cols': [], 'missing_optional_cols': [], 'duplicate_timestamps': 0, 'outside_session_bars': 0, 'outside_session_ratio': 0.0, 'null_ohlcv_bars': 0, 'nonpositive_price_bars': 0, 'zero_volume_bars': 0, 'zero_volume_ratio': 0.0, 'high_low_inconsistent': 0, 'open_outside_range': 0, 'close_outside_range': 0, 'short_day_count': 0, 'short_day_ratio': 0.0, 'max_bar_shortfall': 0, 'extreme_daily_move_count': 0, 'price_limit_checked_day_count': 1377, 'price_limit_skipped_gap_day_count': 38, 'max_abs_daily_return': 0.2940034512510785, 'max_abs_price_limit_checked_return': 0.1999467518636846}"
+market_data_cleaning_recorded,True,"{'raw_rows': 68304, 'cleaned_rows': 67968, 'dropped_rows': 336, 'raw_trade_days': 1423, 'cleaned_trade_days': 1416, 'dropped_trade_days': 7, 'invalid_bar_count': 297, 'invalid_reason_counts': {'null_ohlcv': 0, 'nonpositive_price': 288, 'nonpositive_volume': 297, 'high_low_inconsistent': 0, 'open_outside_range': 0, 'close_outside_range': 0, 'outside_session': 0}, 'first_invalid_timestamp': '2024-09-27 10:30:00', 'last_invalid_timestamp': '2025-09-08 15:00:00'}"
+data_hash_recorded,True,bc925d336dea3bf61c6399f8985aefb5437958fe845c1866bc26fbef2f297d0e
+source_bundle_hash_recorded,True,c7f79fd9026f11b57cfe7e0b8fb1bb92c6d5e7037eeb0425fe78f2ed503d922d
+config_hash_recorded,True,51b875b1593555a39c82a32f6fb2f3fd25716c6e58011a9bb6b050d126c71a31
+fold_summary_non_empty,True,rows=1
+stress_metrics_present,True,"fold,selected_model,train_start,train_end,test_start,test_end,subtrain_rows,calibration_rows,test_rows,test_buy_auc,test_sell_auc,valid_buy_auc,valid_sell_auc,total_return,annualized_return,max_drawdown,sharpe,sortino,calmar,trade_count,win_rate,avg_net_return_per_trade,median_net_return_per_trade,backtest_mode,buy_threshold,sell_threshold,initial_capital,final_equity,final_benchmark_equity,final_alpha_equity,alpha_total_return,alpha_sharpe,alpha_sortino,alpha_calmar,alpha_max_drawdown,base_shares,ending_shares,base_position_pct,max_t0_trade_pct,max_participation_rate,commission_rate,slippage_rate,tp,sl,no_overnight,stress_scenario_count,stress_min_alpha_total_return,stress_worst_alpha_drawdown,stress_min_trade_count,output_dir"
+quality_report_present,True,True
+live_readiness_status_present,True,FAIL
+live_readiness_all_gates_boolean,True,"{'reproducibility_clean_source_tree': False, 'feature_leakage_passed': True, 'execution_feasibility_passed': True, 'walk_forward_quality_passed': True, 'min_executed_folds': False, 'min_total_trades': False, 'positive_median_alpha_return': True, 'median_buy_auc_above_live_floor': True, 'median_sell_auc_above_live_floor': True, 'drawdown_within_live_limit': True, 'stress_alpha_positive': False, 'stress_drawdown_within_live_limit': True, 'shadow_monitoring_passed': False}"
+execution_feasibility_gate_present,True,True
+hard_no_capital_rule_present,True,No real capital deployment unless status == PASS and all artifacts are reviewed.
+shadow_monitoring_gate_present,True,False
+shadow_monitoring_report_status_valid_if_present,True,missing

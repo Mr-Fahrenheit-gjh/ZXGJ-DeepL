@@ -626,3 +626,65 @@ def export_t0_backtest_result(
     equity.to_csv(output_dir / "t0_equity_curve.csv")
     with open(output_dir / "t0_backtest_stats.json", "w", encoding="utf-8") as f:
         json.dump(stats, f, ensure_ascii=False, indent=2)
+
+
+def run_inventory_t0_stress_grid(
+    signal_df: pd.DataFrame,
+    buy_threshold: float,
+    sell_threshold: float,
+    config: dict,
+    output_dir: str | Path,
+) -> pd.DataFrame:
+    """Stress the inventory T+0 simulator under higher costs and tighter liquidity."""
+    output_dir = Path(output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    base_commission = float(config.get("commission_rate", 0.001))
+    base_slippage = float(config.get("slippage_rate", 0.0005))
+    commission_multipliers = config.get("stress_commission_multipliers", [1.0, 1.5])
+    slippage_multipliers = config.get("stress_slippage_multipliers", [1.0, 1.5, 2.0])
+    participation_rates = config.get("stress_participation_rates", [config.get("max_participation_rate", 0.05)])
+
+    rows = []
+    for commission_mult in commission_multipliers:
+        for slippage_mult in slippage_multipliers:
+            for participation_rate in participation_rates:
+                scenario_config = dict(config)
+                scenario_config["commission_rate"] = base_commission * float(commission_mult)
+                scenario_config["slippage_rate"] = base_slippage * float(slippage_mult)
+                scenario_config["max_participation_rate"] = float(participation_rate)
+                trades, equity, stats = run_a_share_inventory_t0_backtest(
+                    signal_df,
+                    buy_threshold=buy_threshold,
+                    sell_threshold=sell_threshold,
+                    config=scenario_config,
+                )
+                scenario_name = (
+                    f"comm{commission_mult:g}_slip{slippage_mult:g}_part{float(participation_rate):g}"
+                    .replace(".", "p")
+                )
+                scenario_dir = output_dir / scenario_name
+                export_t0_backtest_result(scenario_dir, trades, equity, stats)
+                rows.append(
+                    {
+                        "scenario": scenario_name,
+                        "commission_multiplier": float(commission_mult),
+                        "slippage_multiplier": float(slippage_mult),
+                        "max_participation_rate": float(participation_rate),
+                        **stats,
+                        "output_dir": str(scenario_dir),
+                    }
+                )
+
+    stress_df = pd.DataFrame(rows)
+    stress_df.to_csv(output_dir / "stress_test_summary.csv", index=False)
+    aggregate = {
+        "scenario_count": int(len(stress_df)),
+        "all_alpha_positive": bool((stress_df["alpha_total_return"] > 0).all()) if "alpha_total_return" in stress_df and len(stress_df) else False,
+        "min_alpha_total_return": float(stress_df["alpha_total_return"].min()) if "alpha_total_return" in stress_df and len(stress_df) else np.nan,
+        "worst_alpha_max_drawdown": float(stress_df["alpha_max_drawdown"].min()) if "alpha_max_drawdown" in stress_df and len(stress_df) else np.nan,
+        "min_trade_count": int(stress_df["trade_count"].min()) if "trade_count" in stress_df and len(stress_df) else 0,
+    }
+    with open(output_dir / "stress_test_aggregate.json", "w", encoding="utf-8") as f:
+        json.dump(aggregate, f, ensure_ascii=False, indent=2)
+    return stress_df
