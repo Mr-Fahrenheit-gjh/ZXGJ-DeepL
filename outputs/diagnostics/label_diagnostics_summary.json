@@ -1,10 +1,11 @@
 {
   "candidate_label_cols": [
-    "label_round_trip_net"
+    "label_t0_action"
   ],
-  "current_target_col": "label_round_trip_net",
-  "definition": "trade_return > 2 * (commission_rate + slippage_rate)",
-  "threshold": 0.003,
+  "current_target_col": "label_t0_action",
+  "definition": "sell if trade_return < -ONE_SIDE_COST; hold otherwise; buy if trade_return > ONE_SIDE_COST",
+  "threshold": 0.0015,
+  "round_trip_cost": 0.003,
   "output_files": {
     "label_summary": "outputs\\diagnostics\\label_summary.csv",
     "label_class_distribution": "outputs\\diagnostics\\label_class_distribution.csv",
