@@ -1,2 +1,2 @@
-lookback,horizon,target_col,label_definition,label_threshold,one_side_cost,round_trip_cost,fixed_threshold_quantile,sequence_mode,status,lookback_minutes,horizon_minutes
-32,3,label_t0_action,0=sell if trade_return < -ONE_SIDE_COST; 1=hold; 2=buy if trade_return > ONE_SIDE_COST,0.0015,0.0015,0.003,0.95,continuous,active,160,15
+lookback,horizon,target_col,sell_target_col,label_definition,tp,sl,label_cost,round_trip_cost,same_bar_policy,timeout_policy,fixed_threshold_quantile,sequence_mode,status,lookback_minutes,horizon_minutes
+32,3,buy_label,sell_label,path-dependent triple-barrier opportunity labels: buy_label/sell_label,0.003,0.002,0.0015,0.003,pessimistic,final_return,0.95,continuous,active,160,15

@@ -1,14 +1,17 @@
 {
-  "candidate_label_cols": [
-    "label_t0_action"
-  ],
-  "current_target_col": "label_t0_action",
-  "definition": "sell if trade_return < -ONE_SIDE_COST; hold otherwise; buy if trade_return > ONE_SIDE_COST",
-  "threshold": 0.0015,
-  "round_trip_cost": 0.003,
+  "current_target_col": "buy_label",
+  "sell_target_col": "sell_label",
+  "label_mode": "path_dependent_opportunity",
+  "horizon": 3,
+  "tp": 0.003,
+  "sl": 0.002,
+  "cost": 0.0015,
+  "same_bar_policy": "pessimistic",
+  "timeout_policy": "final_return",
   "output_files": {
     "label_summary": "outputs\\diagnostics\\label_summary.csv",
-    "label_class_distribution": "outputs\\diagnostics\\label_class_distribution.csv",
-    "label_return_by_class": "outputs\\diagnostics\\label_return_by_class.csv"
+    "label_reason_distribution": "outputs\\diagnostics\\label_reason_distribution.csv",
+    "label_return_by_class": "outputs\\diagnostics\\label_return_by_class.csv",
+    "label_parameter_stability": "outputs\\diagnostics\\label_parameter_stability.csv"
   }
 }
