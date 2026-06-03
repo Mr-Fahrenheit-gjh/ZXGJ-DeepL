@@ -1,0 +1,30 @@
+[
+  {
+    "fold": 0,
+    "train_start_pos": 0,
+    "train_end_pos": 800,
+    "valid_start_pos": 800,
+    "valid_end_pos": 960,
+    "train_start": "2020-07-23 09:35:00",
+    "train_end": "2020-08-14 13:40:00",
+    "valid_start": "2020-08-14 13:45:00",
+    "valid_end": "2020-08-19 15:00:00",
+    "train_bars": 800,
+    "valid_bars": 160,
+    "expanding": false
+  },
+  {
+    "fold": 1,
+    "train_start_pos": 160,
+    "train_end_pos": 960,
+    "valid_start_pos": 960,
+    "valid_end_pos": 1120,
+    "train_start": "2020-07-28 10:55:00",
+    "train_end": "2020-08-19 15:00:00",
+    "valid_start": "2020-08-20 09:35:00",
+    "valid_end": "2020-08-25 10:50:00",
+    "train_bars": 800,
+    "valid_bars": 160,
+    "expanding": false
+  }
+]

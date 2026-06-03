@@ -1,0 +1,8 @@
+{
+  "split_policy": "chronological walk-forward by bar position; no random shuffle",
+  "fold_policy": "each train window is split into subtrain and calibration; fold validation is treated as out-of-sample test",
+  "preprocessing_policy": "winsorization and standardization are fit on subtrain only, then applied to calibration and test",
+  "threshold_policy": "buy/sell thresholds are calibration-set fixed quantiles, never selected from the fold test window",
+  "ensemble_policy": "model weights are proportional to validation AUC edge over 0.5; equal fallback if no model beats random",
+  "execution_policy": "signal at bar t, execute at next bar open with commission, slippage, lot size, no-overlap state machine, tp/sl and no-overnight handling"
+}

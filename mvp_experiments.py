@@ -127,15 +127,24 @@ def safe_action_metrics(y_true, prob_matrix, config):
     prob_matrix = np.asarray(prob_matrix)
     pred_class = prob_matrix.argmax(axis=1)
     buy_class = get_buy_class(config)
-    sell_class = get_sell_class(config)
     metrics = {
         "accuracy": float((pred_class == y_true).mean()),
         "buy_auc": safe_auc_score((y_true == buy_class).astype(int), prob_matrix[:, buy_class]),
-        "sell_auc": safe_auc_score((y_true == sell_class).astype(int), prob_matrix[:, sell_class]),
         "buy_positive_rate": float((y_true == buy_class).mean()),
-        "sell_positive_rate": float((y_true == sell_class).mean()),
-        "hold_rate": float((y_true == get_hold_class(config)).mean()),
     }
+    if is_multiclass_config(config):
+        sell_class = get_sell_class(config)
+        metrics.update({
+            "sell_auc": safe_auc_score((y_true == sell_class).astype(int), prob_matrix[:, sell_class]),
+            "sell_positive_rate": float((y_true == sell_class).mean()),
+            "hold_rate": float((y_true == get_hold_class(config)).mean()),
+        })
+    else:
+        metrics.update({
+            "sell_auc": np.nan,
+            "sell_positive_rate": np.nan,
+            "hold_rate": float((y_true == 0).mean()),
+        })
     return metrics
 
 
@@ -684,7 +693,7 @@ def evaluate_lstm_horizon_model(
             sample_count=("pred_prob", "size"),
             pred_prob_mean=("pred_prob", "mean"),
             buy_label_mean=("y_true", lambda x: float((x == get_buy_class(config)).mean())),
-            sell_label_mean=("y_true", lambda x: float((x == get_sell_class(config)).mean())),
+            sell_label_mean=("y_true", lambda x: float((x == get_sell_class(config)).mean()) if is_multiclass_config(config) else np.nan),
             trade_return_mean=("trade_return", "mean"),
             trade_return_median=("trade_return", "median"),
         )

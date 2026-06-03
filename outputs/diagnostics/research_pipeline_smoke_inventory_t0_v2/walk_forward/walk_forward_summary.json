@@ -1,0 +1,54 @@
+{
+  "model_names": [
+    "logistic_regression",
+    "random_forest"
+  ],
+  "split_count": 2,
+  "executed_fold_count": 2,
+  "mean_total_return": -0.020819547685523743,
+  "median_total_return": -0.020819547685523743,
+  "mean_alpha_total_return": -0.004303266893999735,
+  "median_alpha_total_return": -0.004303266893999735,
+  "mean_test_buy_auc": 0.5254955675452,
+  "median_test_buy_auc": 0.5254955675452,
+  "mean_test_sell_auc": 0.6091888564235441,
+  "median_test_sell_auc": 0.6091888564235441,
+  "total_trades": 21,
+  "quality_report": {
+    "gates": {
+      "min_folds": 1,
+      "min_total_trades": 1,
+      "min_median_test_buy_auc": 0.52,
+      "min_median_alpha_return": 0.0,
+      "max_median_drawdown": -0.08
+    },
+    "observed": {
+      "fold_count": 2,
+      "total_trades": 21,
+      "median_test_buy_auc": 0.5254955675452,
+      "median_alpha_return": -0.004303266893999735,
+      "median_max_drawdown": -0.005595844572999831,
+      "drawdown_metric": "alpha_max_drawdown",
+      "return_metric": "alpha_total_return"
+    },
+    "checks": {
+      "enough_folds": true,
+      "enough_trades": true,
+      "buy_auc_above_gate": true,
+      "alpha_return_above_gate": false,
+      "drawdown_within_gate": true
+    },
+    "all_passed": false,
+    "note": "Research gate only. Passing this does not prove live-trading readiness."
+  },
+  "methodology": {
+    "split_policy": "chronological walk-forward by bar position; no random shuffle",
+    "fold_policy": "each train window is split into subtrain and calibration; fold validation is treated as out-of-sample test",
+    "preprocessing_policy": "winsorization and standardization are fit on subtrain only, then applied to calibration and test",
+    "threshold_policy": "buy/sell thresholds are calibration-set fixed quantiles, never selected from the fold test window",
+    "ensemble_policy": "model weights are proportional to validation AUC edge over 0.5; equal fallback if no model beats random",
+    "execution_policy": "signal at bar t, execute at next bar open with commission, slippage, lot size, no-overlap state machine, tp/sl and no-overnight handling",
+    "a_share_t0_policy": "default inventory mode starts with tradable base shares; same-day sells use existing inventory, buybacks restore inventory, and buy-first exits sell old inventory rather than same-day purchases",
+    "liquidity_policy": "single trade size is capped by max_participation_rate of next-bar volume when volume is available"
+  }
+}

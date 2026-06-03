@@ -1,0 +1,22 @@
+{
+  "data_path": "688981_5min_20200716-20260602.parquet",
+  "raw_shape": [
+    68304,
+    8
+  ],
+  "prepared_shape": [
+    67705,
+    250
+  ],
+  "index_start": "2020-07-23 09:35:00",
+  "index_end": "2026-06-01 14:45:00",
+  "feature_count": 194,
+  "run_walk_forward": false,
+  "quick": true,
+  "methodology": {
+    "numeric_conversion": "open/high/low/close/volume/amount are coerced to numeric before feature engineering",
+    "feature_engineering": "feature_engineering.build_basic_features and select_feature_columns",
+    "labeling": "path-dependent buy/sell opportunity labels with tp/sl/cost from MVP_CONFIG",
+    "validation": "optional walk-forward subtrain/calibration/out-of-sample test via walk_forward_runner"
+  }
+}
