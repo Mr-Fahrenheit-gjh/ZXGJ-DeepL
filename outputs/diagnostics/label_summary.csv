@@ -1,5 +1,5 @@
 label_col,split,definition,threshold,sample_count,n_classes,positive_rate,future_return_mean_all,future_return_mean_label_1,future_return_median_label_1
-label_cost_net,all,future_return > commission_rate + slippage_rate,0.0015,67705,2,0.2857100657263127,4.521621131556212e-05,0.006092785970188823,0.0039233165413110616
-label_cost_net,train,future_return > commission_rate + slippage_rate,0.0015,47393,2,0.27546262106218217,-1.417629807374348e-05,0.005534718877119318,0.0037054191755443444
-label_cost_net,valid,future_return > commission_rate + slippage_rate,0.0015,10156,2,0.2922410397794407,0.00020316507449710163,0.00770683243528031,0.00445369223923997
-label_cost_net,test,future_return > commission_rate + slippage_rate,0.0015,10156,2,0.3269988184324537,0.0001644226452477839,0.006844088587361621,0.004454865181711787
+label_round_trip_net,all,future_return > 2 * (commission_rate + slippage_rate),0.003,67705,2,0.18339856731408316,4.521621131556212e-05,0.008271744396799521,0.005673088287436512
+label_round_trip_net,train,future_return > 2 * (commission_rate + slippage_rate),0.003,47393,2,0.17051041293017957,-1.417629807374348e-05,0.007596649362389079,0.005439879947477078
+label_round_trip_net,valid,future_return > 2 * (commission_rate + slippage_rate),0.003,10156,2,0.1983064198503348,0.00020316507449710163,0.010324364874304517,0.006504791932596898
+label_round_trip_net,test,future_return > 2 * (commission_rate + slippage_rate),0.003,10156,2,0.22863332020480504,0.0001644226452477839,0.008840850913326532,0.006044243447457021

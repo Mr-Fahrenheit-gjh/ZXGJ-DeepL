@@ -1,9 +1,9 @@
 label_col,split,class,count,ratio
-label_cost_net,all,0,48361,0.7142899342736874
-label_cost_net,all,1,19344,0.2857100657263127
-label_cost_net,train,0,34338,0.7245373789378178
-label_cost_net,train,1,13055,0.27546262106218217
-label_cost_net,valid,0,7188,0.7077589602205593
-label_cost_net,valid,1,2968,0.2922410397794407
-label_cost_net,test,0,6835,0.6730011815675463
-label_cost_net,test,1,3321,0.3269988184324537
+label_round_trip_net,all,0,55288,0.8166014326859169
+label_round_trip_net,all,1,12417,0.18339856731408316
+label_round_trip_net,train,0,39312,0.8294895870698205
+label_round_trip_net,train,1,8081,0.17051041293017957
+label_round_trip_net,valid,0,8142,0.8016935801496652
+label_round_trip_net,valid,1,2014,0.1983064198503348
+label_round_trip_net,test,0,7834,0.7713666797951949
+label_round_trip_net,test,1,2322,0.22863332020480504

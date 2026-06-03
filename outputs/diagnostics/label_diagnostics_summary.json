@@ -1,10 +1,10 @@
 {
   "candidate_label_cols": [
-    "label_cost_net"
+    "label_round_trip_net"
   ],
-  "current_target_col": "label_cost_net",
-  "definition": "future_return > commission_rate + slippage_rate",
-  "threshold": 0.0015,
+  "current_target_col": "label_round_trip_net",
+  "definition": "future_return > 2 * (commission_rate + slippage_rate)",
+  "threshold": 0.003,
   "output_files": {
     "label_summary": "outputs\\diagnostics\\label_summary.csv",
     "label_class_distribution": "outputs\\diagnostics\\label_class_distribution.csv",

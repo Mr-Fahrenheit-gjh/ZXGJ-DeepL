@@ -1,67 +1,67 @@
 {
   "model": "RandomForestClassifier",
-  "target_col": "label_cost_net",
+  "target_col": "label_round_trip_net",
   "lookback_aligned_to_lstm": 32,
   "feature_count": 194,
   "train_sample_count": 47393,
   "valid_sample_count": 10124,
   "test_sample_count": 10124,
-  "train_positive_rate": 0.27546262106218217,
-  "valid_positive_rate": 0.2922757803239826,
-  "test_positive_rate": 0.3268470960094824,
-  "valid_auc": 0.62040338687817,
-  "test_auc": 0.5709894999453458,
-  "test_acc_05": 0.47668905570920583,
-  "test_precision_05": 0.3583535108958838,
-  "test_recall_05": 0.7603505590812935,
-  "test_f1_05": 0.4871248789932236,
-  "pred_prob_mean": 0.5244924047442721,
-  "pred_prob_std": 0.0735372767683081,
-  "pred_prob_min": 0.2702354252161496,
-  "pred_prob_max": 0.7196283132596928,
-  "signal_count_at_055": 4072,
-  "q80_threshold": 0.5832935742038757,
-  "q90_threshold": 0.6079105074984789,
+  "train_positive_rate": 0.17051041293017957,
+  "valid_positive_rate": 0.1985381272224417,
+  "test_positive_rate": 0.22896088502568154,
+  "valid_auc": 0.694959390869169,
+  "test_auc": 0.6400592385185441,
+  "test_acc_05": 0.49851837218490713,
+  "test_precision_05": 0.2843520400187588,
+  "test_recall_05": 0.7847282139775669,
+  "test_f1_05": 0.4174411933448078,
+  "pred_prob_mean": 0.5256226498762163,
+  "pred_prob_std": 0.12256569539535375,
+  "pred_prob_min": 0.1338517103538128,
+  "pred_prob_max": 0.7776854770102404,
+  "signal_count_at_055": 4901,
+  "q80_threshold": 0.6359396925913785,
+  "q90_threshold": 0.667312072384949,
   "top10_feature_importance": [
     {
-      "feature": "parkinson_vol_5",
-      "importance": 0.035294854332752514
-    },
-    {
       "feature": "bar_in_day",
-      "importance": 0.035015630853796026
+      "importance": 0.04376172217703934
     },
     {
       "feature": "bar_in_day_pct",
-      "importance": 0.03251721955905246
+      "importance": 0.04090908539511895
     },
     {
-      "feature": "range_mean_5",
-      "importance": 0.03248717844263227
+      "feature": "parkinson_vol_5",
+      "importance": 0.04019518169416454
     },
     {
       "feature": "range_mean_10",
-      "importance": 0.03130332146372405
-    },
-    {
-      "feature": "parkinson_vol_10",
-      "importance": 0.03039510620462424
+      "importance": 0.03872162551552954
     },
     {
       "feature": "range_mean_48",
-      "importance": 0.02418311086289713
+      "importance": 0.03793132851549397
     },
     {
-      "feature": "vol_10",
-      "importance": 0.023352663779586984
+      "feature": "parkinson_vol_10",
+      "importance": 0.03614319388513762
     },
     {
-      "feature": "vol_5",
-      "importance": 0.02247421752756905
+      "feature": "range_mean_5",
+      "importance": 0.03179676252102932
     },
     {
-      "feature": "range_mean_20",
-      "importance": 0.020363343783071884
+      "feature": "parkinson_vol_48",
+      "importance": 0.030777973976276064
+    },
+    {
+      "feature": "bar_range",
+      "importance": 0.025800349187286735
+    },
+    {
+      "feature": "vol_48",
+      "importance": 0.024922196860958947
     }
   ],
   "output_files": {
