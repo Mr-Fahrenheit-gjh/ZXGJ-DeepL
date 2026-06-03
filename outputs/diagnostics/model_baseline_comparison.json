@@ -1,0 +1,38 @@
+[
+  {
+    "model": "LSTM",
+    "target_col": "label_dynamic_binary",
+    "feature_count": 194,
+    "lookback": 32,
+    "valid_auc": 0.6438299967118801,
+    "test_auc": 0.6407254251372696,
+    "sample_count": 10124,
+    "positive_rate": 0.1550770401954651,
+    "pred_prob_mean": 0.5314030647277832,
+    "pred_prob_max": 0.8332085609436035,
+    "signal_count_at_055": 4586,
+    "q90_threshold": 0.7015786707401276,
+    "q90_active_label_mean": 0.31589338183403015,
+    "q90_active_future_return_mean": 0.0004245145334727975,
+    "q90_total_return": -0.2165361297866656,
+    "q90_sharpe": -0.4632802463059661
+  },
+  {
+    "model": "RandomForest",
+    "target_col": "label_dynamic_binary",
+    "feature_count": 194,
+    "lookback": 32,
+    "valid_auc": 0.6624516128837146,
+    "test_auc": 0.66240385173845,
+    "sample_count": 10124,
+    "positive_rate": 0.15507704464638483,
+    "pred_prob_mean": 0.44021365464324186,
+    "pred_prob_max": 0.7887728135686176,
+    "signal_count_at_055": 1770,
+    "q90_threshold": 0.5903861567379954,
+    "q90_active_label_mean": 0.3474827245804541,
+    "q90_active_future_return_mean": 0.00032164654057594954,
+    "q90_total_return": -0.49339700835847355,
+    "q90_sharpe": -1.2510989604498555
+  }
+]

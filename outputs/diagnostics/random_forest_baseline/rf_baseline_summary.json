@@ -1,0 +1,74 @@
+{
+  "model": "RandomForestClassifier",
+  "target_col": "label_dynamic_binary",
+  "lookback_aligned_to_lstm": 32,
+  "feature_count": 194,
+  "train_sample_count": 47393,
+  "valid_sample_count": 10124,
+  "test_sample_count": 10124,
+  "train_positive_rate": 0.15033865760766357,
+  "valid_positive_rate": 0.152212564203872,
+  "test_positive_rate": 0.15507704464638483,
+  "valid_auc": 0.6624516128837146,
+  "test_auc": 0.66240385173845,
+  "test_acc_05": 0.6782892137495061,
+  "test_precision_05": 0.24307036247334754,
+  "test_recall_05": 0.5082802547770701,
+  "test_f1_05": 0.3288687409849578,
+  "pred_prob_mean": 0.44021365464324186,
+  "pred_prob_std": 0.1229297222876836,
+  "pred_prob_min": 0.09932976684998074,
+  "pred_prob_max": 0.7887728135686176,
+  "signal_count_at_055": 1770,
+  "q80_threshold": 0.5396960095180555,
+  "q90_threshold": 0.5903861567379954,
+  "top10_feature_importance": [
+    {
+      "feature": "bar_in_day_pct",
+      "importance": 0.05691387305805044
+    },
+    {
+      "feature": "bar_in_day",
+      "importance": 0.043306876066291675
+    },
+    {
+      "feature": "log_volume_ratio_20",
+      "importance": 0.0427631073436172
+    },
+    {
+      "feature": "volume_ratio_20",
+      "importance": 0.0356696177398938
+    },
+    {
+      "feature": "log_amount_ratio_20",
+      "importance": 0.03465234300006002
+    },
+    {
+      "feature": "vol_zscore_20_48",
+      "importance": 0.03422783272913904
+    },
+    {
+      "feature": "amount_ratio_20",
+      "importance": 0.033617343955510665
+    },
+    {
+      "feature": "log_amount_ratio_10",
+      "importance": 0.017496224515331442
+    },
+    {
+      "feature": "vol_ratio_5_20",
+      "importance": 0.016382207211054788
+    },
+    {
+      "feature": "volume_ratio_10",
+      "importance": 0.01615359457309538
+    }
+  ],
+  "output_files": {
+    "predictions": "outputs\\diagnostics\\random_forest_baseline\\rf_test_predictions.csv",
+    "group_analysis": "outputs\\diagnostics\\random_forest_baseline\\rf_signal_group_analysis.csv",
+    "threshold_diagnostics": "outputs\\diagnostics\\random_forest_baseline\\rf_signal_threshold_diagnostics.csv",
+    "probability_describe": "outputs\\diagnostics\\random_forest_baseline\\rf_probability_describe.csv",
+    "feature_importance": "outputs\\diagnostics\\random_forest_baseline\\rf_feature_importance.csv"
+  }
+}
