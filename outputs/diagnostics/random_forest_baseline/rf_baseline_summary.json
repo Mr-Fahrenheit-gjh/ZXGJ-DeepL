@@ -16,10 +16,10 @@
   "test_recall_05": 0.7871883061049011,
   "test_f1_05": 0.42033976124885214,
   "pred_prob_mean": 0.5252546652429789,
-  "pred_prob_std": 0.12138767299756122,
+  "pred_prob_std": 0.12138767299756123,
   "pred_prob_min": 0.1174727328477063,
-  "pred_prob_max": 0.7773719345191625,
-  "q80_threshold": 0.6366753184022969,
+  "pred_prob_max": 0.7773719345191624,
+  "q80_threshold": 0.636675318402297,
   "q90_threshold": 0.6646243827266717,
   "top10_feature_importance": [
     {
