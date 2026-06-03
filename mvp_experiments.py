@@ -13,6 +13,8 @@ from sklearn.metrics import roc_auc_score
 from sklearn.preprocessing import StandardScaler
 from torch.utils.data import DataLoader, Dataset
 
+from label_builder import build_path_dependent_opportunity_labels
+
 
 DEFAULT_PERIODS_PER_YEAR = 48 * 242
 DEFAULT_THRESHOLD_QUANTILES = [0.95]
@@ -79,6 +81,10 @@ class LSTMClassifier(nn.Module):
 
 def is_multiclass_config(config):
     return int(config.get("num_classes", 2)) > 2
+
+
+def is_path_opportunity_config(config):
+    return config.get("label_mode") == "path_dependent_opportunity"
 
 
 def get_buy_class(config):
@@ -276,6 +282,21 @@ def run_fixed_horizon_event_backtest(
     equity = trades_df.set_index("exit_time")["equity"]
     trade_frequency_stats = calc_trade_frequency_stats(trades_df, periods_per_year)
 
+    if "y_true" in trades_df:
+        y_true = trades_df["y_true"].astype(int)
+        if y_true.max() <= 1:
+            positive_label_rate = float((y_true == 1).mean())
+            buy_label_rate = positive_label_rate
+            sell_label_rate = np.nan
+        else:
+            positive_label_rate = float((y_true == 2).mean())
+            buy_label_rate = positive_label_rate
+            sell_label_rate = float((y_true == 0).mean())
+    else:
+        positive_label_rate = np.nan
+        buy_label_rate = np.nan
+        sell_label_rate = np.nan
+
     stats = {
         "threshold": float(threshold),
         "horizon": int(horizon),
@@ -293,8 +314,9 @@ def run_fixed_horizon_event_backtest(
         "bar_annualized_sharpe": trade_frequency_stats["bar_annualized_sharpe"],
         "sharpe": trade_frequency_stats["sharpe"],
         "avg_pred_prob": float(trades_df["pred_prob"].mean()),
-        "positive_label_rate": float((trades_df["y_true"] > 0).mean()) if "y_true" in trades_df else np.nan,
-        "buy_label_rate": float((trades_df["y_true"] == 2).mean()) if "y_true" in trades_df else np.nan,
+        "positive_label_rate": positive_label_rate,
+        "buy_label_rate": buy_label_rate,
+        "sell_label_rate": sell_label_rate,
     }
     return trades_df, equity, stats
 
@@ -312,19 +334,36 @@ def _resolve_device(device=None):
 def build_horizon_dataset(base_df, feature_cols, target_col, config, horizon, lookback):
     label_threshold = config.get("label_threshold", config.get("one_side_cost", config["round_trip_cost"]))
     data = base_df.copy().sort_index()
-    data["future_close"] = data["close"].shift(-horizon)
-    data["future_entry_open"] = data["open"].shift(-1)
-    data["future_return"] = data["future_close"] / data["close"] - 1
-    data["trade_return"] = data["future_close"] / data["future_entry_open"] - 1
-    if is_multiclass_config(config):
-        data[target_col] = get_hold_class(config)
-        data.loc[data["trade_return"] > label_threshold, target_col] = get_buy_class(config)
-        data.loc[data["trade_return"] < -label_threshold, target_col] = get_sell_class(config)
-        data[target_col] = data[target_col].astype(int)
+
+    if is_path_opportunity_config(config):
+        data = build_path_dependent_opportunity_labels(
+            data,
+            horizon=horizon,
+            tp=config.get("tp", 0.003),
+            sl=config.get("sl", 0.002),
+            cost=config.get("label_cost", config.get("one_side_cost", 0.0015)),
+            same_bar_policy=config.get("same_bar_policy", "pessimistic"),
+            timeout_policy=config.get("timeout_policy", "final_return"),
+            buy_label_col=config.get("buy_label_col", "buy_label"),
+            sell_label_col=config.get("sell_label_col", "sell_label"),
+        )
     else:
-        data[target_col] = (data["trade_return"] > label_threshold).astype(int)
+        data["future_close"] = data["close"].shift(-horizon)
+        data["future_entry_open"] = data["open"].shift(-1)
+        data["future_return"] = data["future_close"] / data["close"] - 1
+        data["trade_return"] = data["future_close"] / data["future_entry_open"] - 1
+        if is_multiclass_config(config):
+            data[target_col] = get_hold_class(config)
+            data.loc[data["trade_return"] > label_threshold, target_col] = get_buy_class(config)
+            data.loc[data["trade_return"] < -label_threshold, target_col] = get_sell_class(config)
+            data[target_col] = data[target_col].astype(int)
+        else:
+            data[target_col] = (data["trade_return"] > label_threshold).astype(int)
 
     needed_cols = feature_cols + [target_col, "future_return", "trade_return", "future_close", "future_entry_open"]
+    for optional_col in ["buy_gross_return", "sell_gross_return", "buy_exit_bar", "sell_exit_bar"]:
+        if optional_col in data.columns:
+            needed_cols.append(optional_col)
     data = data.replace([np.inf, -np.inf], np.nan)
     data = data.dropna(subset=needed_cols).copy()
 
@@ -644,7 +683,8 @@ def evaluate_lstm_horizon_model(
         .agg(
             sample_count=("pred_prob", "size"),
             pred_prob_mean=("pred_prob", "mean"),
-            label_mean=("y_true", "mean"),
+            buy_label_mean=("y_true", lambda x: float((x == get_buy_class(config)).mean())),
+            sell_label_mean=("y_true", lambda x: float((x == get_sell_class(config)).mean())),
             trade_return_mean=("trade_return", "mean"),
             trade_return_median=("trade_return", "median"),
         )
