@@ -1,10 +1,36 @@
 {
   "lookback":32,
   "horizon":3,
-  "target_col":"label_dynamic_binary",
+  "target_col":"label_cost_net",
   "sequence_mode":"continuous",
   "feature_count":194,
   "train_seq_count":47361,
   "valid_seq_count":10124,
-  "test_seq_count":10124
+  "test_seq_count":10124,
+  "mvp_config":{
+    "symbol":"688981",
+    "bar_minutes":5,
+    "horizon":3,
+    "lookback":32,
+    "commission_rate":0.001,
+    "slippage_rate":0.0005,
+    "target_col":"label_cost_net",
+    "sequence_mode":"continuous",
+    "train_ratio":0.7,
+    "valid_ratio":0.15,
+    "batch_size_train":128,
+    "batch_size_eval":256,
+    "lstm_hidden_dim":256,
+    "lstm_num_layers":2,
+    "lstm_dropout":0.3,
+    "learning_rate":0.0005,
+    "weight_decay":0.000001,
+    "max_epochs":100,
+    "early_stop_patience":10,
+    "grad_clip_norm":1.0,
+    "rf_n_estimators":300,
+    "rf_max_depth":8,
+    "rf_min_samples_leaf":50,
+    "random_state":42
+  }
 }
