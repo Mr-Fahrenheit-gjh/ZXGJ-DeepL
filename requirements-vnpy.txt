@@ -1,0 +1,7 @@
+# Optional VeighNa / vn.py event-driven backtest dependencies.
+# Install after requirements.txt. These packages may have stricter Python
+# version constraints than the core research pipeline.
+
+vnpy>=4.0
+vnpy_ctastrategy>=1.2
+vnpy_sqlite>=1.0

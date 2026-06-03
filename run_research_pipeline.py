@@ -28,6 +28,7 @@ from model_signals import (
 )
 from vnpy_backtest import export_dual_signal_file, run_vnpy_dual_signal_t0_backtest, check_vnpy_available
 from walk_forward_runner import run_walk_forward_signal_research
+from project_paths import DEFAULT_DATA_PATH, DEFAULT_OUTPUT_DIR, display_project_path, resolve_project_path
 
 
 NUMERIC_OHLCV_COLS = ["open", "high", "low", "close", "volume", "amount"]
@@ -51,12 +52,12 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Run the 688981 T+0 research pipeline.")
     parser.add_argument(
         "--data-path",
-        default="688981_5min_20200716-20260602.parquet",
+        default=str(DEFAULT_DATA_PATH),
         help="Input 5-minute OHLCV parquet file.",
     )
     parser.add_argument(
         "--output-dir",
-        default="outputs/diagnostics/research_pipeline",
+        default=str(DEFAULT_OUTPUT_DIR),
         help="Pipeline output directory.",
     )
     parser.add_argument(
@@ -113,7 +114,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def load_market_data(path: str | Path) -> pd.DataFrame:
-    path = Path(path)
+    path = resolve_project_path(path)
     if not path.exists():
         raise FileNotFoundError(f"Data file not found: {path}")
     df = pd.read_parquet(path)
@@ -440,7 +441,10 @@ def export_pipeline_manifest(
 
 def main() -> None:
     args = parse_args()
+    args.data_path = str(resolve_project_path(args.data_path))
+    args.output_dir = str(resolve_project_path(args.output_dir))
     output_dir = Path(args.output_dir)
+    output_dir = resolve_project_path(output_dir)
     config = build_pipeline_config(args)
 
     raw_df = load_market_data(args.data_path)
@@ -487,13 +491,13 @@ def main() -> None:
             print(json.dumps(vnpy_report, ensure_ascii=False, indent=2, default=_json_default))
         print("Walk-forward summary:")
         print(json.dumps(walk_forward_result["aggregate_summary"], ensure_ascii=False, indent=2, default=_json_default))
-        print(f"Walk-forward report: {report_path}")
+        print(f"Walk-forward report: {display_project_path(report_path)}")
         print("Live readiness:")
         print(json.dumps(readiness_report, ensure_ascii=False, indent=2, default=_json_default))
     else:
         print("Prepared research dataset only. Add --run-walk-forward to train and backtest.")
 
-    print(f"Output directory: {output_dir}")
+    print(f"Output directory: {display_project_path(output_dir)}")
     print(f"Prepared rows: {len(prepared_df)}, features: {len(feature_cols)}")
 
 

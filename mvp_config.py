@@ -3,6 +3,8 @@ from __future__ import annotations
 from copy import deepcopy
 from pathlib import Path
 
+from project_paths import PROJECT_ROOT
+
 
 BASE_MVP_CONFIG: dict = {
     "symbol": "688981",
@@ -139,7 +141,10 @@ def build_mvp_config(overrides: dict | None = None) -> dict:
     config["label_threshold"] = config["label_cost"]
     config["total_cost"] = one_side_cost
 
-    config["diagnostics_dir"] = str(Path(config["diagnostics_dir"]))
+    diagnostics_dir = Path(config["diagnostics_dir"])
+    if not diagnostics_dir.is_absolute():
+        diagnostics_dir = PROJECT_ROOT / diagnostics_dir
+    config["diagnostics_dir"] = str(diagnostics_dir)
     return config
 
 

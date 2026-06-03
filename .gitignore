@@ -1,0 +1,14 @@
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+.DS_Store
+
+.venv/
+venv/
+env/
+
+outputs/
+*.log
+
+# Local notebooks can be large/noisy; keep the main project code in .py files.
+*.as.json

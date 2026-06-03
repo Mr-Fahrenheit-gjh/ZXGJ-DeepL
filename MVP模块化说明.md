@@ -6,63 +6,66 @@
 ## 模块职责
 
 ```text
-1. mvp_config.py
+1. project_paths.py
+   项目根目录、默认数据路径、默认输出路径和相对路径解析，方便跨电脑迁移。
+
+2. mvp_config.py
    全局参数：成本、tp/sl、lookback/horizon、模型超参、风控参数、输出路径。
 
-2. feature_engineering.py
+3. feature_engineering.py
    基础特征、特征筛选、时间切分、缩尾、标准化、序列样本构造。
 
-3. label_builder.py
+4. label_builder.py
    路径依赖机会标签：
    - buy_label: 未来路径是否出现可交易的低吸/买入机会
    - sell_label: 未来路径是否出现可交易的高抛/卖出机会
 
-4. diagnostics.py
+5. diagnostics.py
    标签诊断、特征尺度检查、信号分层诊断。
 
-5. model_signals.py
+6. model_signals.py
    信号模型层：Logistic/RF/Transformer-LSTM/LSTM/CNN/MLP，统一输出 buy_prob / sell_prob。
 
-6. ensemble.py
+7. ensemble.py
    多模型集成层：按验证集 AUC 超过 0.5 的边际信息加权。
 
-7. explainability.py
+8. explainability.py
    排列重要性、输入梯度重要性、可选 SHAP 汇总。
 
-8. risk_management.py
+9. risk_management.py
    A 股底仓 T+0 状态机、动态仓位、成交量参与率约束、Sharpe/Sortino/Calmar/最大回撤。
 
-9. validation.py
+10. validation.py
    walk-forward 时间序列切分和切分留痕。
 
-10. walk_forward_runner.py
+11. walk_forward_runner.py
    subtrain/calibration/test 编排、训练、集成、回测、质量门槛和 methodology 留痕。
 
-11. hyperparameter_optimization.py
+12. hyperparameter_optimization.py
    Optuna 可选搜索入口，导出 trials 表和 best params。
 
-12. vnpy_backtest.py
+13. vnpy_backtest.py
    vn.py 数据写入、信号导出、CTA 策略和 vn.py 回测接口。
 
-13. run_research_pipeline.py
+14. run_research_pipeline.py
    命令行复现实验入口：parquet -> 特征 -> 标签 -> walk-forward -> Markdown 报告。
 
-14. research_report.py
+15. research_report.py
    将 walk-forward JSON/CSV 结果导出为 Markdown 研究报告。
 
-15. production_readiness.py
+16. production_readiness.py
    实盘前审计：数据/代码/config 指纹、特征泄漏审计、live readiness 硬门槛。
 
-16. live_monitoring.py
+17. live_monitoring.py
    影子盘/纸面交易监控：特征 PSI、buy/sell 概率 PSI、影子盘收益、回撤、连续亏损、交易次数和胜率。
 
-17. execution_audit.py
+18. execution_audit.py
    A 股数据清洗和执行可行性审计：OHLCV 完整性、重复时间戳、零成交量、交易时段、短交易日和异常涨跌幅。
 
-18. verify_production_readiness.py
+19. verify_production_readiness.py
    一键检查 pipeline 输出目录是否包含完整证据链，并导出 production_readiness_checks.csv。
 
-19. MVP.ipynb
+20. MVP.ipynb
    编排入口和结果展示，不再堆大段模型实现。
 ```
 

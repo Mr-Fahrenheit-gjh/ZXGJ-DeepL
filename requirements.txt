@@ -1,0 +1,24 @@
+# Core runtime for the 688981 T+0 research pipeline.
+# Python 3.10-3.12 is recommended. Python 3.13 may work, but some finance
+# packages can lag behind the newest Python release.
+
+numpy>=1.26
+pandas>=2.2
+scikit-learn>=1.4
+scipy>=1.11
+pyarrow>=15.0
+tabulate>=0.9
+
+# Deep sequence models: Transformer-LSTM, LSTM, CNN, MLP.
+torch>=2.2
+
+# Optional but used by pipeline flags when installed:
+#   --run-optuna
+#   --run-explainability
+optuna>=3.6
+shap>=0.45
+
+# Notebook/report convenience.
+jupyterlab>=4.0
+matplotlib>=3.8
+seaborn>=0.13

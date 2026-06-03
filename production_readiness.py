@@ -10,6 +10,7 @@ import pandas as pd
 
 
 SOURCE_FILES = [
+    "project_paths.py",
     "mvp_config.py",
     "feature_engineering.py",
     "label_builder.py",

@@ -1,0 +1,5 @@
+# Optional data-source helpers. The project can run from the included parquet
+# data without these packages, but they are useful for rebuilding datasets.
+
+akshare>=1.15
+baostock>=0.8
