@@ -199,6 +199,134 @@ def build_basic_features(df: pd.DataFrame) -> pd.DataFrame:
     return out.copy()
 
 
+def _require_ta():
+    try:
+        import ta
+    except ImportError as exc:
+        raise ImportError(
+            "TA feature set requires the 'ta' package. Install it with: pip install ta"
+        ) from exc
+    return ta
+
+
+def build_ta_features(df: pd.DataFrame) -> pd.DataFrame:
+    """Build a TA-library feature set without raw absolute price/volume levels.
+
+    The TA package exposes many indicators whose native values are absolute
+    prices or cumulative volume series. This function intentionally converts
+    those to ratios, percentages, bounded oscillators, or z-scores before they
+    can enter model training.
+    """
+    ta = _require_ta()
+    out = ensure_datetime_index(df)
+    out = out.copy()
+    out["trade_date"] = out.index.normalize()
+
+    close = out["close"].astype(float)
+    high = out["high"].astype(float)
+    low = out["low"].astype(float)
+    open_ = out["open"].astype(float)
+    volume = out["volume"].astype(float)
+
+    out["ret_1"] = close.pct_change(1)
+    out["log_ret_1"] = np.log(close / (close.shift(1) + EPS) + EPS)
+    out["body"] = (close - open_) / (open_ + EPS)
+    out["bar_range"] = (high - low) / (close + EPS)
+    out["close_position"] = (close - low) / (high - low + EPS)
+
+    for w in [3, 5, 10, 20, 48]:
+        out[f"ta_ret_{w}"] = close.pct_change(w)
+        out[f"ta_volatility_ret_std_{w}"] = out["ret_1"].rolling(w).std()
+        out[f"ta_volume_ratio_{w}"] = volume / (volume.rolling(w).mean() + EPS)
+        out[f"ta_log_volume_ratio_{w}"] = np.log1p(volume) - np.log1p(volume.rolling(w).mean())
+
+    for w in [7, 14, 21]:
+        out[f"ta_momentum_rsi_{w}"] = ta.momentum.RSIIndicator(close=close, window=w).rsi() / 100.0
+        out[f"ta_momentum_roc_{w}"] = ta.momentum.ROCIndicator(close=close, window=w).roc() / 100.0
+        out[f"ta_trend_adx_{w}"] = ta.trend.ADXIndicator(high=high, low=low, close=close, window=w).adx() / 100.0
+        out[f"ta_volatility_atr_pct_{w}"] = (
+            ta.volatility.AverageTrueRange(high=high, low=low, close=close, window=w).average_true_range()
+            / (close + EPS)
+        )
+
+    stoch = ta.momentum.StochasticOscillator(high=high, low=low, close=close, window=14, smooth_window=3)
+    out["ta_momentum_stoch"] = stoch.stoch() / 100.0
+    out["ta_momentum_stoch_signal"] = stoch.stoch_signal() / 100.0
+    out["ta_momentum_williams_r"] = ta.momentum.WilliamsRIndicator(high=high, low=low, close=close, lbp=14).williams_r() / 100.0
+    out["ta_momentum_ultimate_oscillator"] = (
+        ta.momentum.UltimateOscillator(high=high, low=low, close=close).ultimate_oscillator() / 100.0
+    )
+    out["ta_momentum_ppo"] = ta.momentum.PercentagePriceOscillator(close=close).ppo() / 100.0
+    out["ta_momentum_ppo_signal"] = ta.momentum.PercentagePriceOscillator(close=close).ppo_signal() / 100.0
+
+    macd = ta.trend.MACD(close=close)
+    out["ta_trend_macd_pct"] = macd.macd() / (close + EPS)
+    out["ta_trend_macd_signal_pct"] = macd.macd_signal() / (close + EPS)
+    out["ta_trend_macd_diff_pct"] = macd.macd_diff() / (close + EPS)
+    out["ta_trend_cci"] = ta.trend.CCIIndicator(high=high, low=low, close=close, window=20).cci() / 100.0
+    out["ta_trend_dpo_pct"] = ta.trend.DPOIndicator(close=close, window=20).dpo() / (close + EPS)
+    out["ta_trend_kst"] = ta.trend.KSTIndicator(close=close).kst() / 100.0
+    out["ta_trend_kst_signal"] = ta.trend.KSTIndicator(close=close).kst_sig() / 100.0
+    out["ta_trend_aroon_up"] = ta.trend.AroonIndicator(high=high, low=low, window=25).aroon_up() / 100.0
+    out["ta_trend_aroon_down"] = ta.trend.AroonIndicator(high=high, low=low, window=25).aroon_down() / 100.0
+    out["ta_trend_aroon_indicator"] = ta.trend.AroonIndicator(high=high, low=low, window=25).aroon_indicator() / 100.0
+
+    boll = ta.volatility.BollingerBands(close=close, window=20, window_dev=2)
+    out["ta_volatility_bollinger_pband"] = boll.bollinger_pband()
+    out["ta_volatility_bollinger_wband"] = boll.bollinger_wband() / 100.0
+    keltner = ta.volatility.KeltnerChannel(high=high, low=low, close=close, window=20)
+    out["ta_volatility_keltner_pband"] = keltner.keltner_channel_pband()
+    out["ta_volatility_keltner_wband"] = keltner.keltner_channel_wband() / 100.0
+    donchian = ta.volatility.DonchianChannel(high=high, low=low, close=close, window=20)
+    out["ta_volatility_donchian_pband"] = donchian.donchian_channel_pband()
+    out["ta_volatility_donchian_wband"] = donchian.donchian_channel_wband() / 100.0
+
+    out["ta_volume_mfi"] = ta.volume.MFIIndicator(high=high, low=low, close=close, volume=volume, window=14).money_flow_index() / 100.0
+    out["ta_volume_cmf"] = ta.volume.ChaikinMoneyFlowIndicator(high=high, low=low, close=close, volume=volume, window=20).chaikin_money_flow()
+    out["ta_volume_eom_pct"] = ta.volume.EaseOfMovementIndicator(high=high, low=low, volume=volume, window=14).ease_of_movement()
+    out["ta_volume_fi_norm"] = (
+        ta.volume.ForceIndexIndicator(close=close, volume=volume, window=13).force_index()
+        / ((close * volume).rolling(13).mean() + EPS)
+    )
+    out["ta_volume_nvi_ret"] = ta.volume.NegativeVolumeIndexIndicator(close=close, volume=volume).negative_volume_index().pct_change()
+
+    out["bar_in_day"] = out.groupby("trade_date").cumcount()
+    out["bars_in_day"] = out.groupby("trade_date")["close"].transform("count")
+    out["bar_in_day_pct"] = out["bar_in_day"] / (out["bars_in_day"] - 1 + EPS)
+    out["is_morning"] = ((out.index.time >= pd.Timestamp("09:30").time()) & (out.index.time <= pd.Timestamp("11:30").time())).astype(int)
+    out["is_afternoon"] = ((out.index.time >= pd.Timestamp("13:00").time()) & (out.index.time <= pd.Timestamp("15:00").time())).astype(int)
+    out["is_open_30min"] = (out["bar_in_day"] < 6).astype(int)
+    out["is_close_30min"] = (out["bar_in_day"] >= out["bars_in_day"] - 6).astype(int)
+
+    trade_dates = pd.Series(out["trade_date"].unique()).sort_values()
+    calendar = pd.DataFrame({"trade_date": trade_dates})
+    calendar["prev_trade_date"] = calendar["trade_date"].shift(1)
+    calendar["gap_days"] = (calendar["trade_date"] - calendar["prev_trade_date"]).dt.days.fillna(1)
+    calendar["is_after_weekend"] = ((calendar["gap_days"] == 3) & (calendar["trade_date"].dt.dayofweek == 0)).astype(int)
+    calendar["is_after_holiday"] = (calendar["gap_days"] > 3).astype(int)
+    calendar_cols = ["gap_days", "is_after_weekend", "is_after_holiday"]
+    out = out.join(calendar.set_index("trade_date")[calendar_cols], on="trade_date")
+    out[calendar_cols] = out[calendar_cols].fillna(0)
+
+    out = out.replace([np.inf, -np.inf], np.nan).dropna().copy()
+    return out.copy()
+
+
+def build_feature_set(df: pd.DataFrame, config: dict) -> pd.DataFrame:
+    feature_set = str(config.get("feature_engineering_set", "basic")).lower()
+    if feature_set == "basic":
+        return build_basic_features(df)
+    if feature_set == "ta":
+        return build_ta_features(df)
+    if feature_set in {"basic_ta", "ta_basic"}:
+        basic = build_basic_features(df)
+        ta_features = build_ta_features(df)
+        ta_cols = [c for c in ta_features.columns if c.startswith("ta_")]
+        shared_cols = [c for c in ["open", "high", "low", "close", "volume", "amount", "trade_date"] if c in ta_features.columns]
+        return basic.join(ta_features[ta_cols + [c for c in shared_cols if c not in basic.columns]], how="inner")
+    raise ValueError(f"unsupported feature_engineering_set: {feature_set}")
+
+
 BASE_EXCLUDE_COLS = [
     "open", "high", "low", "close", "volume", "amount", "trade_date",
     "buy_exit_reason", "sell_exit_reason",
@@ -223,6 +351,8 @@ TARGET_AND_LEAK_COLS = [
 
 def _is_absolute_level_feature(col: str) -> bool:
     if col.startswith(("volume_ma_", "amount_ma_", "volume_same_bar_mean_", "amount_same_bar_mean_")):
+        return True
+    if col.startswith(("ta_trend_sma", "ta_trend_ema", "ta_trend_wma", "ta_volume_obv")):
         return True
     if col.startswith("ma_") and not col.startswith(("ma_dev_", "ma_slope_", "ma_gap_")):
         return True
@@ -257,6 +387,7 @@ def select_feature_columns(df: pd.DataFrame, extra_exclude: Iterable[str] | None
         "leak_cols": leak_cols,
         "constant_cols": constant_cols,
         "feature_count": len(feature_cols),
+        "selected_feature_cols": feature_cols,
     }
     return feature_cols, report
 
@@ -305,6 +436,49 @@ def standardize_by_train(
     valid[feature_cols] = scaler.transform(valid[feature_cols])
     test[feature_cols] = scaler.transform(test[feature_cols])
     return train, valid, test, scaler
+
+
+def build_normalization_audit(
+    train_scaled: pd.DataFrame,
+    valid_scaled: pd.DataFrame,
+    test_scaled: pd.DataFrame,
+    feature_cols: list[str],
+) -> tuple[pd.DataFrame, dict]:
+    rows = []
+    for split_name, split_df in [
+        ("train", train_scaled),
+        ("valid", valid_scaled),
+        ("test", test_scaled),
+    ]:
+        values = split_df[feature_cols]
+        desc = pd.DataFrame({
+            "feature": feature_cols,
+            "split": split_name,
+            "mean": values.mean().to_numpy(dtype=float),
+            "std": values.std(ddof=0).to_numpy(dtype=float),
+            "min": values.min().to_numpy(dtype=float),
+            "max": values.max().to_numpy(dtype=float),
+            "abs_mean": values.mean().abs().to_numpy(dtype=float),
+            "abs_max": values.abs().max().to_numpy(dtype=float),
+            "nan_count": values.isna().sum().to_numpy(dtype=int),
+        })
+        rows.append(desc)
+    audit_df = pd.concat(rows, ignore_index=True)
+    train_rows = audit_df[audit_df["split"] == "train"]
+    valid_test_rows = audit_df[audit_df["split"].isin(["valid", "test"])]
+    train_zero_std = train_rows.loc[train_rows["std"].abs() < 1e-12, "feature"].tolist()
+    summary = {
+        "feature_count": int(len(feature_cols)),
+        "train_max_abs_mean": float(train_rows["abs_mean"].max()) if len(train_rows) else np.nan,
+        "train_median_std": float(train_rows["std"].median()) if len(train_rows) else np.nan,
+        "train_max_std_deviation_from_one": float((train_rows["std"] - 1).abs().max()) if len(train_rows) else np.nan,
+        "train_zero_std_feature_count": int(len(train_zero_std)),
+        "train_zero_std_features": train_zero_std,
+        "valid_test_max_abs_mean": float(valid_test_rows["abs_mean"].max()) if len(valid_test_rows) else np.nan,
+        "valid_test_max_abs_value": float(valid_test_rows["abs_max"].max()) if len(valid_test_rows) else np.nan,
+        "nan_count_total": int(audit_df["nan_count"].sum()),
+    }
+    return audit_df, summary
 
 
 def make_sequence_data(data: pd.DataFrame, feature_cols: list[str], target_col: str, lookback: int):

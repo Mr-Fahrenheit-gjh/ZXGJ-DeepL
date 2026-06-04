@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 
 from ensemble import build_ensemble_signal_result
-from feature_engineering import make_sequence_data, standardize_by_train, winsorize_by_train
+from feature_engineering import build_normalization_audit, make_sequence_data, standardize_by_train, winsorize_by_train
 from explainability import (
     compute_permutation_importance_binary,
     compute_torch_gradient_importance,
@@ -444,6 +444,15 @@ def run_walk_forward_signal_research(
             sell_target_col=sell_target_col,
             config=config,
         )
+        normalization_audit, normalization_summary = build_normalization_audit(
+            fold_data["subtrain_scaled"],
+            fold_data["calibration_scaled"],
+            fold_data["test_scaled"],
+            feature_cols,
+        )
+        normalization_audit.to_csv(fold_dir / "normalization_audit.csv", index=False)
+        with open(fold_dir / "normalization_summary.json", "w", encoding="utf-8") as f:
+            json.dump(normalization_summary, f, ensure_ascii=False, indent=2, default=_json_default)
 
         model_results = {}
         for model_name in model_names:
@@ -567,6 +576,7 @@ def run_walk_forward_signal_research(
                 "selected_model_summary": signal_result["summary"],
                 "t0_stats": stats,
                 "stress_stats": stress_stats,
+                "normalization_summary": normalization_summary,
                 "explainability_manifest": explainability_manifest,
                 "output_dir": display_project_path(fold_dir),
             }

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import contextlib
 import datetime as dt
 import json
 from pathlib import Path
@@ -8,11 +9,11 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from feature_engineering import build_basic_features, select_feature_columns
+from feature_engineering import build_feature_set, select_feature_columns
 from feature_engineering import make_sequence_data, split_time_series, standardize_by_train, winsorize_by_train
 from label_builder import build_path_dependent_opportunity_labels, summarize_opportunity_labels
 from execution_audit import audit_execution_feasibility, clean_market_data_for_execution
-from hyperparameter_optimization import run_optuna_sequence_search
+from hyperparameter_optimization import run_optuna_sequence_search, run_walk_forward_config_search
 from mvp_config import build_mvp_config
 from production_readiness import (
     audit_feature_leakage,
@@ -90,11 +91,13 @@ def write_final_run_summary(
             "run_explainability": bool(args.run_explainability),
             "run_vnpy_backtest": bool(args.run_vnpy_backtest),
             "run_optuna": bool(args.run_optuna),
+            "run_wf_optuna": bool(args.run_wf_optuna),
             "max_folds": args.max_folds,
             "device": args.device,
             "model_names": args.model_names,
         },
         "config_core": {
+            "feature_engineering_set": config.get("feature_engineering_set"),
             "lookback": config.get("lookback"),
             "horizon": config.get("horizon"),
             "tp": config.get("tp"),
@@ -107,6 +110,7 @@ def write_final_run_summary(
         "live_readiness": readiness_report,
         "vnpy_backtest": vnpy_report,
         "optuna": optuna_report,
+        "walk_forward_optuna": config.get("walk_forward_optuna_report"),
         "walk_forward_report": display_project_path(report_path) if report_path else None,
         "progress_files": {
             "pipeline_status": display_project_path(output_dir / "pipeline_status.json"),
@@ -152,6 +156,12 @@ def parse_args() -> argparse.Namespace:
         default=None,
         help="Model names for walk-forward, e.g. logistic_regression random_forest transformer_lstm.",
     )
+    parser.add_argument(
+        "--feature-set",
+        default=None,
+        choices=["basic", "ta", "basic_ta"],
+        help="Feature engineering set: built-in basic features, TA-library features, or both.",
+    )
     parser.add_argument("--max-folds", type=int, default=None, help="Limit walk-forward folds.")
     parser.add_argument("--device", default=None, help="Torch device for deep sequence models.")
     parser.add_argument(
@@ -165,12 +175,19 @@ def parse_args() -> argparse.Namespace:
         help="Run optional Optuna hyperparameter search before walk-forward.",
     )
     parser.add_argument(
+        "--run-wf-optuna",
+        action="store_true",
+        help="Run Optuna search over walk-forward trading objective and apply the best config to the final run.",
+    )
+    parser.add_argument(
         "--optuna-model",
         default="transformer_lstm",
         choices=["transformer_lstm", "lstm", "cnn", "mlp"],
         help="Sequence model optimized by Optuna.",
     )
     parser.add_argument("--optuna-trials", type=int, default=None, help="Override Optuna trial count.")
+    parser.add_argument("--wf-optuna-trials", type=int, default=None, help="Override walk-forward Optuna trial count.")
+    parser.add_argument("--wf-optuna-timeout", type=int, default=None, help="Optional walk-forward Optuna timeout in seconds.")
     parser.add_argument(
         "--run-explainability",
         action="store_true",
@@ -180,6 +197,11 @@ def parse_args() -> argparse.Namespace:
         "--run-vnpy-backtest",
         action="store_true",
         help="Run optional vn.py event-driven backtest from selected walk-forward signals.",
+    )
+    parser.add_argument(
+        "--verbose",
+        action="store_true",
+        help="Print full JSON reports to terminal. By default, full reports are written to files.",
     )
     return parser.parse_args()
 
@@ -228,6 +250,8 @@ def build_pipeline_config(args: argparse.Namespace) -> dict:
         overrides["walk_forward_max_folds"] = args.max_folds
     if args.model_names:
         overrides["walk_forward_model_names"] = args.model_names
+    if args.feature_set:
+        overrides["feature_engineering_set"] = args.feature_set
     if args.full_model_suite:
         overrides["walk_forward_model_names"] = [
             "transformer_lstm",
@@ -241,6 +265,10 @@ def build_pipeline_config(args: argparse.Namespace) -> dict:
         overrides["run_explainability"] = True
     if args.optuna_trials is not None:
         overrides["optuna_n_trials"] = args.optuna_trials
+    if args.wf_optuna_trials is not None:
+        overrides["wf_optuna_n_trials"] = args.wf_optuna_trials
+    if args.wf_optuna_timeout is not None:
+        overrides["wf_optuna_timeout_seconds"] = args.wf_optuna_timeout
     config = build_mvp_config(overrides)
     config["diagnostics_dir"] = str(Path(args.output_dir))
     return config
@@ -340,6 +368,55 @@ def run_optuna_from_pipeline(
     return report
 
 
+def run_walk_forward_optuna_from_pipeline(
+    data: pd.DataFrame,
+    feature_cols: list[str],
+    config: dict,
+    output_dir: Path,
+    device: str | None = None,
+) -> dict:
+    optuna_dir = output_dir / "walk_forward_optuna"
+    optuna_dir.mkdir(parents=True, exist_ok=True)
+    model_names = list(config.get("walk_forward_model_names", ["logistic_regression", "random_forest"]))
+
+    def evaluator(trial_config: dict, trial_output: Path) -> dict:
+        trial_config = dict(trial_config)
+        trial_config["run_explainability"] = False
+        return run_walk_forward_signal_research(
+            data=data,
+            feature_cols=feature_cols,
+            config=trial_config,
+            output_dir=trial_output,
+            model_names=model_names,
+            device=device,
+        )
+
+    try:
+        result = run_walk_forward_config_search(
+            evaluator=evaluator,
+            base_config=config,
+            model_names=model_names,
+            output_dir=optuna_dir,
+            n_trials=int(config.get("wf_optuna_n_trials", config.get("optuna_n_trials", 20))),
+            timeout=config.get("wf_optuna_timeout_seconds", config.get("optuna_timeout_seconds")),
+        )
+    except ImportError as exc:
+        report = {
+            "status": "SKIPPED",
+            "reason": str(exc),
+            "install_hint": "pip install optuna",
+        }
+        with (optuna_dir / "walk_forward_optuna_report.json").open("w", encoding="utf-8") as f:
+            json.dump(report, f, ensure_ascii=False, indent=2, default=_json_default)
+        return {"report": report, "best_config": config}
+
+    report = dict(result["report"])
+    report["output_dir"] = display_project_path(result["output_dir"])
+    with (optuna_dir / "walk_forward_optuna_report.json").open("w", encoding="utf-8") as f:
+        json.dump(report, f, ensure_ascii=False, indent=2, default=_json_default)
+    return {"report": report, "best_config": result["best_config"]}
+
+
 def run_optional_vnpy_stage(
     walk_forward_result: dict,
     config: dict,
@@ -411,8 +488,59 @@ def run_optional_vnpy_stage(
     return report
 
 
+def run_optional_vnpy_stage_with_log(
+    walk_forward_result: dict,
+    config: dict,
+    output_dir: Path,
+) -> dict:
+    """Run vn.py while capturing its noisy console progress into a log file."""
+    vnpy_dir = output_dir / "vnpy_backtest"
+    vnpy_dir.mkdir(parents=True, exist_ok=True)
+    log_path = vnpy_dir / "vnpy_console.log"
+    with log_path.open("w", encoding="utf-8") as log_file:
+        with contextlib.redirect_stdout(log_file), contextlib.redirect_stderr(log_file):
+            report = run_optional_vnpy_stage(walk_forward_result, config, output_dir)
+    if "signal_file" in report:
+        report["signal_file"] = display_project_path(report["signal_file"])
+    report["console_log"] = display_project_path(log_path)
+    with (vnpy_dir / "vnpy_backtest_report.json").open("w", encoding="utf-8") as f:
+        json.dump(report, f, ensure_ascii=False, indent=2, default=_json_default)
+    return report
+
+
+def print_compact_run_summary(
+    output_dir: Path,
+    prepared_rows: int,
+    feature_count: int,
+    walk_forward_result: dict | None,
+    readiness_report: dict | None,
+    vnpy_report: dict | None,
+) -> None:
+    print("Pipeline finished.")
+    print(f"Output directory: {display_project_path(output_dir)}")
+    print(f"Final summary: {display_project_path(output_dir / 'final_run_summary.json')}")
+    print(f"Status file: {display_project_path(output_dir / 'pipeline_status.json')}")
+    print(f"Prepared rows: {prepared_rows}, features: {feature_count}")
+    if walk_forward_result:
+        summary = walk_forward_result["aggregate_summary"]
+        print(
+            "Walk-forward: "
+            f"folds={summary.get('executed_fold_count')}, "
+            f"trades={summary.get('total_trades')}, "
+            f"median_alpha={summary.get('median_alpha_total_return'):.6f}, "
+            f"median_buy_auc={summary.get('median_test_buy_auc'):.4f}, "
+            f"median_sell_auc={summary.get('median_test_sell_auc'):.4f}"
+        )
+        print(f"Walk-forward progress: {display_project_path(output_dir / 'walk_forward' / 'walk_forward_progress.json')}")
+        print(f"Walk-forward report: {display_project_path(output_dir / 'walk_forward' / 'walk_forward_report.md')}")
+    if readiness_report:
+        print(f"Live readiness: {readiness_report.get('status')}")
+    if vnpy_report:
+        print(f"vn.py backtest: {vnpy_report.get('status')}, log={vnpy_report.get('console_log')}")
+
+
 def prepare_research_dataset(raw_df: pd.DataFrame, config: dict) -> tuple[pd.DataFrame, list[str], dict]:
-    data = build_basic_features(raw_df)
+    data = build_feature_set(raw_df, config)
     data = build_path_dependent_opportunity_labels(
         data,
         horizon=int(config["horizon"]),
@@ -444,6 +572,7 @@ def prepare_research_dataset(raw_df: pd.DataFrame, config: dict) -> tuple[pd.Dat
         sell_label_col=config["sell_label_col"],
     )
     metadata = {
+        "feature_engineering_set": config.get("feature_engineering_set", "basic"),
         "feature_report": feature_report,
         "label_summary": label_summary.to_dict(orient="records"),
         "label_reason_distribution": label_reason_distribution.to_dict(orient="records"),
@@ -464,6 +593,17 @@ def export_pipeline_manifest(
 ) -> None:
     output_dir.mkdir(parents=True, exist_ok=True)
     pd.Series(feature_cols, name="feature").to_csv(output_dir / "feature_cols.csv", index=False)
+    with open(output_dir / "feature_engineering_report.json", "w", encoding="utf-8") as f:
+        json.dump(
+            {
+                "feature_engineering_set": metadata.get("feature_engineering_set"),
+                "feature_report": metadata.get("feature_report"),
+            },
+            f,
+            ensure_ascii=False,
+            indent=2,
+            default=_json_default,
+        )
     pd.DataFrame(metadata["label_summary"]).to_csv(output_dir / "label_summary.csv", index=False)
     pd.DataFrame(metadata["label_reason_distribution"]).to_csv(
         output_dir / "label_reason_distribution.csv", index=False
@@ -486,6 +626,7 @@ def export_pipeline_manifest(
         "index_start": str(prepared_df.index.min()),
         "index_end": str(prepared_df.index.max()),
         "feature_count": len(feature_cols),
+        "feature_engineering_set": metadata.get("feature_engineering_set"),
         "run_walk_forward": bool(args.run_walk_forward),
         "quick": bool(args.quick),
         "feature_leakage_audit": leakage_audit,
@@ -501,7 +642,7 @@ def export_pipeline_manifest(
         },
         "methodology": {
             "numeric_conversion": "open/high/low/close/volume/amount are coerced to numeric before feature engineering",
-            "feature_engineering": "feature_engineering.build_basic_features and select_feature_columns",
+            "feature_engineering": "feature_engineering.build_feature_set and select_feature_columns",
             "labeling": "path-dependent buy/sell opportunity labels with tp/sl/cost from MVP_CONFIG",
             "validation": "optional walk-forward subtrain/calibration/out-of-sample test via walk_forward_runner",
         },
@@ -528,6 +669,7 @@ def main() -> None:
             "run_explainability": bool(args.run_explainability),
             "run_vnpy_backtest": bool(args.run_vnpy_backtest),
             "run_optuna": bool(args.run_optuna),
+            "run_wf_optuna": bool(args.run_wf_optuna),
         },
     )
 
@@ -557,6 +699,23 @@ def main() -> None:
             device=args.device,
         )
         write_pipeline_status(output_dir, stage="optuna", status="COMPLETED", details=optuna_report)
+
+    wf_optuna_report = None
+    if args.run_wf_optuna:
+        write_pipeline_status(output_dir, stage="walk_forward_optuna", status="RUNNING")
+        wf_optuna_result = run_walk_forward_optuna_from_pipeline(
+            data=prepared_df,
+            feature_cols=feature_cols,
+            config=config,
+            output_dir=output_dir,
+            device=args.device,
+        )
+        wf_optuna_report = wf_optuna_result["report"]
+        config.update(wf_optuna_result["best_config"])
+        config["walk_forward_optuna_report"] = wf_optuna_report
+        with (output_dir / "applied_walk_forward_optuna_config.json").open("w", encoding="utf-8") as f:
+            json.dump(config, f, ensure_ascii=False, indent=2, default=_json_default)
+        write_pipeline_status(output_dir, stage="walk_forward_optuna", status="COMPLETED", details=wf_optuna_report)
 
     walk_forward_result = None
     readiness_report = None
@@ -597,15 +756,17 @@ def main() -> None:
         report_path = export_walk_forward_markdown_report(walk_forward_result["output_dir"])
         if args.run_vnpy_backtest:
             write_pipeline_status(output_dir, stage="vnpy_backtest", status="RUNNING")
-            vnpy_report = run_optional_vnpy_stage(walk_forward_result, config, output_dir)
+            vnpy_report = run_optional_vnpy_stage_with_log(walk_forward_result, config, output_dir)
             write_pipeline_status(output_dir, stage="vnpy_backtest", status="COMPLETED", details=vnpy_report)
-            print("vn.py backtest:")
-            print(json.dumps(vnpy_report, ensure_ascii=False, indent=2, default=_json_default))
-        print("Walk-forward summary:")
-        print(json.dumps(walk_forward_result["aggregate_summary"], ensure_ascii=False, indent=2, default=_json_default))
-        print(f"Walk-forward report: {display_project_path(report_path)}")
-        print("Live readiness:")
-        print(json.dumps(readiness_report, ensure_ascii=False, indent=2, default=_json_default))
+        if args.verbose:
+            if vnpy_report:
+                print("vn.py backtest:")
+                print(json.dumps(vnpy_report, ensure_ascii=False, indent=2, default=_json_default))
+            print("Walk-forward summary:")
+            print(json.dumps(walk_forward_result["aggregate_summary"], ensure_ascii=False, indent=2, default=_json_default))
+            print(f"Walk-forward report: {display_project_path(report_path)}")
+            print("Live readiness:")
+            print(json.dumps(readiness_report, ensure_ascii=False, indent=2, default=_json_default))
     else:
         print("Prepared research dataset only. Add --run-walk-forward to train and backtest.")
 
@@ -630,9 +791,19 @@ def main() -> None:
             "live_readiness_status": readiness_report.get("status") if readiness_report else None,
         },
     )
-    print(f"Output directory: {display_project_path(output_dir)}")
-    print(f"Final summary: {display_project_path(output_dir / 'final_run_summary.json')}")
-    print(f"Prepared rows: {len(prepared_df)}, features: {len(feature_cols)}")
+    if not args.verbose:
+        print_compact_run_summary(
+            output_dir=output_dir,
+            prepared_rows=len(prepared_df),
+            feature_count=len(feature_cols),
+            walk_forward_result=walk_forward_result,
+            readiness_report=readiness_report,
+            vnpy_report=vnpy_report,
+        )
+    else:
+        print(f"Output directory: {display_project_path(output_dir)}")
+        print(f"Final summary: {display_project_path(output_dir / 'final_run_summary.json')}")
+        print(f"Prepared rows: {len(prepared_df)}, features: {len(feature_cols)}")
 
 
 if __name__ == "__main__":

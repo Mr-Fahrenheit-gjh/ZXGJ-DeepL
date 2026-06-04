@@ -22,6 +22,7 @@ BASE_MVP_CONFIG: dict = {
     "buy_label_col": "buy_label",
     "sell_label_col": "sell_label",
     "label_mode": "path_dependent_opportunity",
+    "feature_engineering_set": "basic",
     "drop_incomplete_labels": True,
     "num_classes": 2,
     "buy_class": 1,
