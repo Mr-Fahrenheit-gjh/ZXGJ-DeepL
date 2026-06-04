@@ -1,0 +1,11 @@
+{
+  "feature_count": 194,
+  "train_max_abs_mean": 5.506706202140776e-16,
+  "train_median_std": 1.0,
+  "train_max_std_deviation_from_one": 3.3306690738754696e-16,
+  "train_zero_std_feature_count": 0,
+  "train_zero_std_features": [],
+  "valid_test_max_abs_mean": 1.1298550504245024,
+  "valid_test_max_abs_value": 11.803091227758832,
+  "nan_count_total": 0
+}
