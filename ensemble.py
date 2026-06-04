@@ -6,7 +6,12 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from model_signals import build_signal_group_analysis, build_signal_threshold_diagnostics, binary_signal_metrics
+from model_signals import (
+    binary_signal_metrics,
+    build_probability_bucket_analysis,
+    build_signal_group_analysis,
+    build_signal_threshold_diagnostics,
+)
 
 
 def auc_edge_weight(auc_value, floor: float = 0.5) -> float:
@@ -103,14 +108,27 @@ def build_ensemble_signal_result(
 
     group_analysis = build_signal_group_analysis(test_signals)
     threshold_diagnostics = build_signal_threshold_diagnostics(test_signals)
+    probability_bucket_analysis = build_probability_bucket_analysis(test_signals)
 
-    signal_cols = ["buy_prob", "sell_prob", "buy_label_true", "sell_label_true", "trade_return", "future_return"]
+    signal_cols = [
+        "buy_prob",
+        "sell_prob",
+        "buy_label_true",
+        "sell_label_true",
+        "trade_return",
+        "future_return",
+        "buy_gross_return",
+        "sell_gross_return",
+        "buy_net_return_est",
+        "sell_net_return_est",
+    ]
     valid_signals[[c for c in signal_cols if c in valid_signals.columns]].to_csv(output_dir / "valid_signals.csv")
     test_signals[[c for c in signal_cols if c in test_signals.columns]].to_csv(output_dir / "test_signals.csv")
     buy_weights.to_csv(output_dir / "buy_weights.csv", index=False)
     sell_weights.to_csv(output_dir / "sell_weights.csv", index=False)
     group_analysis.to_csv(output_dir / "signal_group_analysis.csv", index=False)
     threshold_diagnostics.to_csv(output_dir / "signal_threshold_diagnostics.csv", index=False)
+    probability_bucket_analysis.to_csv(output_dir / "probability_bucket_analysis.csv", index=False)
     with open(output_dir / "signal_summary.json", "w", encoding="utf-8") as f:
         json.dump(summary, f, ensure_ascii=False, indent=2)
 
@@ -119,6 +137,7 @@ def build_ensemble_signal_result(
         "test_signals": test_signals,
         "group_analysis": group_analysis,
         "threshold_diagnostics": threshold_diagnostics,
+        "probability_bucket_analysis": probability_bucket_analysis,
         "summary": summary,
         "buy_weights": buy_weights,
         "sell_weights": sell_weights,

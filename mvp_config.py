@@ -74,7 +74,7 @@ BASE_MVP_CONFIG: dict = {
     "walk_forward_valid_bars": 2400,
     "walk_forward_step_bars": 2400,
     "walk_forward_calibration_ratio": 0.2,
-    "walk_forward_model_names": ["logistic_regression", "random_forest"],
+    "walk_forward_model_names": ["transformer_lstm", "lstm", "cnn", "mlp"],
     "walk_forward_max_folds": None,
     "run_walk_forward_in_notebook": False,
     "optuna_n_trials": 20,

@@ -44,7 +44,7 @@ python -m pip install -r requirements-data.txt
 python run_research_pipeline.py \
   --quick \
   --run-walk-forward \
-  --model-names logistic_regression random_forest \
+  --full-model-suite \
   --max-folds 1 \
   --output-dir outputs/diagnostics/smoke_basic
 ```
@@ -56,13 +56,9 @@ python run_research_pipeline.py \
   --quick \
   --run-walk-forward \
   --feature-set ta \
-  --model-names logistic_regression random_forest \
+  --full-model-suite \
   --max-folds 1 \
   --output-dir outputs/diagnostics/smoke_ta_features
-```
-
-```
-python run_research_pipeline.py --run-walk-forward --max-folds 3 --full-model-suite  --run-vnpy-backtest  --output-dir outputs/diagnostics/research_full
 ```
 
 可选特征集：
@@ -98,7 +94,7 @@ python run_research_pipeline.py \
   --run-walk-forward \
   --run-wf-optuna \
   --wf-optuna-trials 5 \
-  --model-names logistic_regression random_forest \
+  --full-model-suite \
   --max-folds 3 \
   --output-dir outputs/diagnostics/wf_optuna_check
 ```
@@ -125,6 +121,17 @@ outputs/diagnostics/<run_name>/final_run_summary.json
 ```
 
 原来的 `--run-optuna` 仍可用于单个深度模型的训练超参搜索；`--run-wf-optuna` 则用于整体交易系统参数搜索。
+
+可选 baseline 对照不进入题目主线 ensemble，需要时单独运行：
+
+```bash
+python run_research_pipeline.py \
+  --quick \
+  --run-walk-forward \
+  --model-names logistic_regression random_forest \
+  --max-folds 1 \
+  --output-dir outputs/diagnostics/baseline_sklearn
+```
 
 ## 5. 路径说明
 

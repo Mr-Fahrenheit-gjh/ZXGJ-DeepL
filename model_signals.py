@@ -115,6 +115,64 @@ def build_signal_threshold_diagnostics(
     return pd.DataFrame(rows)
 
 
+def build_probability_bucket_analysis(
+    signal_df: pd.DataFrame,
+    bucket_edges: list[float] | None = None,
+) -> pd.DataFrame:
+    """Side-aware probability bucket diagnostics for trading value checks."""
+    bucket_edges = bucket_edges or [0.50, 0.70, 0.80, 0.90, 0.95, 0.98, 1.00]
+    rows = []
+    n = len(signal_df)
+    side_specs = [
+        ("buy", "buy_prob", "buy_label_true", "buy_gross_return", "buy_net_return_est"),
+        ("sell", "sell_prob", "sell_label_true", "sell_gross_return", "sell_net_return_est"),
+    ]
+    for side, prob_col, label_col, gross_col, net_col in side_specs:
+        if prob_col not in signal_df or label_col not in signal_df:
+            continue
+        probs = signal_df[prob_col].astype(float)
+        quantile_thresholds = {q: float(probs.quantile(q)) for q in bucket_edges}
+        for q_low, q_high in zip(bucket_edges[:-1], bucket_edges[1:]):
+            low_threshold = quantile_thresholds[q_low]
+            high_threshold = quantile_thresholds[q_high]
+            if q_high >= 1.0:
+                active = signal_df[probs >= low_threshold].copy()
+            else:
+                active = signal_df[(probs >= low_threshold) & (probs < high_threshold)].copy()
+
+            gross = active[gross_col].astype(float) if gross_col in active else pd.Series(dtype=float)
+            net = active[net_col].astype(float) if net_col in active else pd.Series(dtype=float)
+            positive_net = net[net > 0]
+            negative_net = net[net <= 0]
+            payoff_ratio = (
+                float(positive_net.mean() / abs(negative_net.mean()))
+                if len(positive_net) and len(negative_net) and negative_net.mean() != 0
+                else np.nan
+            )
+
+            rows.append(
+                {
+                    "side": side,
+                    "bucket": f"q{int(q_low * 100):02d}_q{int(q_high * 100):02d}",
+                    "q_low": float(q_low),
+                    "q_high": float(q_high),
+                    "threshold_low": low_threshold,
+                    "threshold_high": high_threshold,
+                    "sample_count": int(len(active)),
+                    "sample_ratio": float(len(active) / n) if n else np.nan,
+                    "prob_mean": float(active[prob_col].mean()) if len(active) else np.nan,
+                    "label_positive_rate": float(active[label_col].mean()) if len(active) else np.nan,
+                    "gross_return_mean": float(gross.mean()) if len(gross) else np.nan,
+                    "net_return_mean": float(net.mean()) if len(net) else np.nan,
+                    "net_win_rate": float((net > 0).mean()) if len(net) else np.nan,
+                    "payoff_ratio": payoff_ratio,
+                    "positive_net_mean": float(positive_net.mean()) if len(positive_net) else np.nan,
+                    "negative_net_mean": float(negative_net.mean()) if len(negative_net) else np.nan,
+                }
+            )
+    return pd.DataFrame(rows)
+
+
 def train_dual_sklearn_signals(
     train_scaled: pd.DataFrame,
     valid_scaled: pd.DataFrame,
@@ -185,15 +243,28 @@ def train_dual_sklearn_signals(
     test_signals["buy_label_true"] = y_test_buy.values
     test_signals["sell_label_true"] = y_test_sell.values
 
-    signal_cols = ["buy_prob", "sell_prob", "buy_label_true", "sell_label_true", "trade_return", "future_return"]
-    valid_signals[signal_cols].to_csv(output_dir / "valid_signals.csv")
-    test_signals[signal_cols].to_csv(output_dir / "test_signals.csv")
+    signal_cols = [
+        "buy_prob",
+        "sell_prob",
+        "buy_label_true",
+        "sell_label_true",
+        "trade_return",
+        "future_return",
+        "buy_gross_return",
+        "sell_gross_return",
+        "buy_net_return_est",
+        "sell_net_return_est",
+    ]
+    valid_signals[[c for c in signal_cols if c in valid_signals.columns]].to_csv(output_dir / "valid_signals.csv")
+    test_signals[[c for c in signal_cols if c in test_signals.columns]].to_csv(output_dir / "test_signals.csv")
 
     group_analysis = build_signal_group_analysis(test_signals)
     group_analysis.to_csv(output_dir / "signal_group_analysis.csv", index=False)
 
     threshold_diagnostics = build_signal_threshold_diagnostics(test_signals)
     threshold_diagnostics.to_csv(output_dir / "signal_threshold_diagnostics.csv", index=False)
+    probability_bucket_analysis = build_probability_bucket_analysis(test_signals)
+    probability_bucket_analysis.to_csv(output_dir / "probability_bucket_analysis.csv", index=False)
 
     with open(output_dir / "signal_summary.json", "w", encoding="utf-8") as f:
         json.dump(summary, f, ensure_ascii=False, indent=2)
@@ -205,6 +276,7 @@ def train_dual_sklearn_signals(
         "test_signals": test_signals,
         "group_analysis": group_analysis,
         "threshold_diagnostics": threshold_diagnostics,
+        "probability_bucket_analysis": probability_bucket_analysis,
         "summary": summary,
         "output_dir": output_dir,
     }
@@ -733,14 +805,20 @@ def train_dual_torch_sequence_signals(
         "sell_label_true",
         "trade_return",
         "future_return",
+        "buy_gross_return",
+        "sell_gross_return",
+        "buy_net_return_est",
+        "sell_net_return_est",
     ]
     valid_signals[[c for c in signal_cols if c in valid_signals.columns]].to_csv(output_dir / "valid_signals.csv")
     test_signals[[c for c in signal_cols if c in test_signals.columns]].to_csv(output_dir / "test_signals.csv")
 
     group_analysis = build_signal_group_analysis(test_signals)
     threshold_diagnostics = build_signal_threshold_diagnostics(test_signals)
+    probability_bucket_analysis = build_probability_bucket_analysis(test_signals)
     group_analysis.to_csv(output_dir / "signal_group_analysis.csv", index=False)
     threshold_diagnostics.to_csv(output_dir / "signal_threshold_diagnostics.csv", index=False)
+    probability_bucket_analysis.to_csv(output_dir / "probability_bucket_analysis.csv", index=False)
     buy_history.to_csv(output_dir / "buy_training_history.csv", index=False)
     sell_history.to_csv(output_dir / "sell_training_history.csv", index=False)
     torch.save(buy_model.state_dict(), output_dir / "buy_model.pt")
@@ -755,6 +833,7 @@ def train_dual_torch_sequence_signals(
         "test_signals": test_signals,
         "group_analysis": group_analysis,
         "threshold_diagnostics": threshold_diagnostics,
+        "probability_bucket_analysis": probability_bucket_analysis,
         "summary": summary,
         "buy_history": buy_history,
         "sell_history": sell_history,

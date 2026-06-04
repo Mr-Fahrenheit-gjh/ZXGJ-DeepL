@@ -154,7 +154,7 @@ def parse_args() -> argparse.Namespace:
         "--model-names",
         nargs="+",
         default=None,
-        help="Model names for walk-forward, e.g. logistic_regression random_forest transformer_lstm.",
+        help="Model names for walk-forward. Main suite: transformer_lstm lstm cnn mlp.",
     )
     parser.add_argument(
         "--feature-set",
@@ -258,8 +258,6 @@ def build_pipeline_config(args: argparse.Namespace) -> dict:
             "lstm",
             "cnn",
             "mlp",
-            "random_forest",
-            "logistic_regression",
         ]
     if args.run_explainability:
         overrides["run_explainability"] = True
@@ -377,7 +375,7 @@ def run_walk_forward_optuna_from_pipeline(
 ) -> dict:
     optuna_dir = output_dir / "walk_forward_optuna"
     optuna_dir.mkdir(parents=True, exist_ok=True)
-    model_names = list(config.get("walk_forward_model_names", ["logistic_regression", "random_forest"]))
+    model_names = list(config.get("walk_forward_model_names", ["transformer_lstm", "lstm", "cnn", "mlp"]))
 
     def evaluator(trial_config: dict, trial_output: Path) -> dict:
         trial_config = dict(trial_config)
