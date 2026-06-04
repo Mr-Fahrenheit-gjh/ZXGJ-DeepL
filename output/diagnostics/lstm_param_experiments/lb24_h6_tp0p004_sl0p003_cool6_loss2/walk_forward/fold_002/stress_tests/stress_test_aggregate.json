@@ -1,0 +1,7 @@
+{
+  "scenario_count": 12,
+  "all_alpha_positive": false,
+  "min_alpha_total_return": -0.004825482741499965,
+  "worst_alpha_max_drawdown": -0.006168059546532656,
+  "min_trade_count": 5
+}

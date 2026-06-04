@@ -1,0 +1,220 @@
+{
+  "status": "COMPLETED",
+  "completed_at": "2026-06-04T16:13:05.368869",
+  "output_dir": "output\\diagnostics\\lstm_param_experiments\\lb24_h3_tp0p003_sl0p002_cool6_loss2",
+  "data_path": "688981_5min_20200716-20260602.parquet",
+  "prepared_rows": 67725,
+  "feature_count": 194,
+  "run_options": {
+    "run_walk_forward": true,
+    "full_model_suite": false,
+    "run_explainability": false,
+    "run_vnpy_backtest": false,
+    "run_optuna": false,
+    "run_wf_optuna": false,
+    "max_folds": 3,
+    "device": null,
+    "model_names": [
+      "lstm"
+    ]
+  },
+  "config_core": {
+    "feature_engineering_set": "basic",
+    "lookback": 24,
+    "horizon": 3,
+    "tp": 0.003,
+    "sl": 0.002,
+    "commission_rate": 0.001,
+    "slippage_rate": 0.0005,
+    "fixed_threshold_quantile": 0.95,
+    "buy_threshold_quantile": 0.95,
+    "sell_threshold_quantile": 0.95,
+    "trade_direction_mode": "sell_only",
+    "run_sell_threshold_grid": true
+  },
+  "walk_forward_summary": {
+    "model_names": [
+      "lstm"
+    ],
+    "split_count": 3,
+    "executed_fold_count": 3,
+    "mean_total_return": -0.02475686376419613,
+    "median_total_return": -0.05247394362527702,
+    "mean_alpha_total_return": -0.0056632939154997635,
+    "median_alpha_total_return": -0.006502513919999786,
+    "mean_test_buy_auc": 0.5288863646889367,
+    "median_test_buy_auc": 0.5288301997094198,
+    "mean_test_sell_auc": 0.49890750201525275,
+    "median_test_sell_auc": 0.4910155606046488,
+    "total_trades": 28,
+    "stress_min_alpha_total_return": -0.011145116628999863,
+    "stress_worst_alpha_drawdown": -0.011749992859076852,
+    "quality_report": {
+      "gates": {
+        "min_folds": 3,
+        "min_total_trades": 30,
+        "min_median_test_buy_auc": 0.52,
+        "min_median_test_sell_auc": 0.52,
+        "min_median_alpha_return": 0.0,
+        "max_median_drawdown": -0.08,
+        "trade_direction_mode": "sell_only"
+      },
+      "observed": {
+        "fold_count": 3,
+        "total_trades": 28,
+        "median_test_buy_auc": 0.5288301997094198,
+        "median_test_sell_auc": 0.4910155606046488,
+        "median_alpha_return": -0.006502513919999786,
+        "median_max_drawdown": -0.008200445572486226,
+        "drawdown_metric": "alpha_max_drawdown",
+        "return_metric": "alpha_total_return"
+      },
+      "checks": {
+        "enough_folds": true,
+        "enough_trades": false,
+        "buy_auc_above_gate": true,
+        "sell_auc_above_gate": false,
+        "direction_auc_above_gate": false,
+        "alpha_return_above_gate": false,
+        "drawdown_within_gate": true
+      },
+      "all_passed": false,
+      "note": "Research gate only. Passing this does not prove live-trading readiness."
+    },
+    "methodology": {
+      "split_policy": "chronological walk-forward by bar position; no random shuffle",
+      "fold_policy": "each train window is split into subtrain and calibration; fold validation is treated as out-of-sample test",
+      "preprocessing_policy": "winsorization and standardization are fit on subtrain only, then applied to calibration and test",
+      "threshold_policy": "buy/sell thresholds are calibration-set fixed quantiles, never selected from the fold test window",
+      "ensemble_policy": "model weights are proportional to validation AUC edge over 0.5; equal fallback if no model beats random",
+      "execution_policy": "signal at bar t, execute at next bar open with commission, slippage, lot size, no-overlap state machine, tp/sl and no-overnight handling",
+      "a_share_t0_policy": "default inventory mode starts with tradable base shares; same-day sells use existing inventory, buybacks restore inventory, and buy-first exits sell old inventory rather than same-day purchases",
+      "liquidity_policy": "single trade size is capped by max_participation_rate of next-bar volume when volume is available",
+      "explainability_policy": "optional per-fold permutation/SHAP for sklearn models and input-gradient importance for torch sequence models"
+    }
+  },
+  "live_readiness": {
+    "status": "FAIL",
+    "live_gates": {
+      "reproducibility_clean_source_tree": false,
+      "feature_leakage_passed": true,
+      "execution_feasibility_passed": true,
+      "walk_forward_quality_passed": false,
+      "min_executed_folds": false,
+      "min_total_trades": false,
+      "positive_median_alpha_return": false,
+      "median_buy_auc_above_live_floor": false,
+      "median_sell_auc_above_live_floor": false,
+      "drawdown_within_live_limit": true,
+      "stress_alpha_positive": false,
+      "stress_drawdown_within_live_limit": true,
+      "shadow_monitoring_passed": false
+    },
+    "observed": {
+      "fold_count": 3,
+      "total_trades": 28,
+      "median_alpha_total_return": -0.006502513919999786,
+      "median_test_buy_auc": 0.5288301997094198,
+      "median_test_sell_auc": 0.4910155606046488,
+      "median_max_drawdown": -0.008200445572486226,
+      "stress_min_alpha_total_return": -0.011145116628999863,
+      "stress_worst_alpha_drawdown": -0.011749992859076852,
+      "shadow_monitoring_status": null,
+      "execution_feasibility_status": "PASS"
+    },
+    "quality_report": {
+      "gates": {
+        "min_folds": 3,
+        "min_total_trades": 30,
+        "min_median_test_buy_auc": 0.52,
+        "min_median_test_sell_auc": 0.52,
+        "min_median_alpha_return": 0.0,
+        "max_median_drawdown": -0.08,
+        "trade_direction_mode": "sell_only"
+      },
+      "observed": {
+        "fold_count": 3,
+        "total_trades": 28,
+        "median_test_buy_auc": 0.5288301997094198,
+        "median_test_sell_auc": 0.4910155606046488,
+        "median_alpha_return": -0.006502513919999786,
+        "median_max_drawdown": -0.008200445572486226,
+        "drawdown_metric": "alpha_max_drawdown",
+        "return_metric": "alpha_total_return"
+      },
+      "checks": {
+        "enough_folds": true,
+        "enough_trades": false,
+        "buy_auc_above_gate": true,
+        "sell_auc_above_gate": false,
+        "direction_auc_above_gate": false,
+        "alpha_return_above_gate": false,
+        "drawdown_within_gate": true
+      },
+      "all_passed": false,
+      "note": "Research gate only. Passing this does not prove live-trading readiness."
+    },
+    "shadow_monitoring_report": null,
+    "execution_feasibility_audit": {
+      "status": "PASS",
+      "checks": {
+        "required_columns_present": true,
+        "datetime_index_monotonic": true,
+        "no_duplicate_timestamps": true,
+        "no_null_ohlcv_bars": true,
+        "no_nonpositive_price_bars": true,
+        "ohlc_ranges_consistent": true,
+        "zero_volume_ratio_within_limit": true,
+        "outside_session_ratio_within_limit": true,
+        "short_day_ratio_within_limit": true,
+        "extreme_daily_moves_within_limit": true
+      },
+      "observed": {
+        "row_count": 67968,
+        "trade_day_count": 1416,
+        "missing_required_cols": [],
+        "missing_optional_cols": [],
+        "duplicate_timestamps": 0,
+        "outside_session_bars": 0,
+        "outside_session_ratio": 0.0,
+        "null_ohlcv_bars": 0,
+        "nonpositive_price_bars": 0,
+        "zero_volume_bars": 0,
+        "zero_volume_ratio": 0.0,
+        "high_low_inconsistent": 0,
+        "open_outside_range": 0,
+        "close_outside_range": 0,
+        "short_day_count": 0,
+        "short_day_ratio": 0.0,
+        "max_bar_shortfall": 0,
+        "extreme_daily_move_count": 0,
+        "price_limit_checked_day_count": 1377,
+        "price_limit_skipped_gap_day_count": 38,
+        "max_abs_daily_return": 0.2940034512510785,
+        "max_abs_price_limit_checked_return": 0.1999467518636846
+      },
+      "thresholds": {
+        "expected_bars_per_day": 48,
+        "min_bars_per_day": 40,
+        "max_zero_volume_bar_ratio": 0.001,
+        "max_outside_session_bar_ratio": 0.0,
+        "max_short_day_ratio": 0.02,
+        "a_share_price_limit_rate": 0.2,
+        "price_limit_tolerance": 0.005,
+        "price_limit_check_max_gap_days": 3,
+        "max_extreme_daily_move_count": 0
+      },
+      "hard_rule": "No live deployment if execution feasibility audit fails."
+    },
+    "hard_rule": "No real capital deployment unless status == PASS and all artifacts are reviewed."
+  },
+  "vnpy_backtest": null,
+  "optuna": null,
+  "walk_forward_optuna": null,
+  "walk_forward_report": "output\\diagnostics\\lstm_param_experiments\\lb24_h3_tp0p003_sl0p002_cool6_loss2\\walk_forward\\walk_forward_report.md",
+  "progress_files": {
+    "pipeline_status": "output\\diagnostics\\lstm_param_experiments\\lb24_h3_tp0p003_sl0p002_cool6_loss2\\pipeline_status.json",
+    "walk_forward_progress": "output\\diagnostics\\lstm_param_experiments\\lb24_h3_tp0p003_sl0p002_cool6_loss2\\walk_forward\\walk_forward_progress.json",
+    "walk_forward_progress_csv": "output\\diagnostics\\lstm_param_experiments\\lb24_h3_tp0p003_sl0p002_cool6_loss2\\walk_forward\\walk_forward_progress.csv"
+  }
+}

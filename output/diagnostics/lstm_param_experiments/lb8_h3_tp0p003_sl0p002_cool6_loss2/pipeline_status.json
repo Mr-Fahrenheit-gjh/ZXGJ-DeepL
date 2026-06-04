@@ -1,0 +1,9 @@
+{
+  "stage": "completed",
+  "status": "COMPLETED",
+  "updated_at": "2026-06-04T16:05:06.926104",
+  "details": {
+    "final_run_summary": "output\\diagnostics\\lstm_param_experiments\\lb8_h3_tp0p003_sl0p002_cool6_loss2\\final_run_summary.json",
+    "live_readiness_status": "FAIL"
+  }
+}

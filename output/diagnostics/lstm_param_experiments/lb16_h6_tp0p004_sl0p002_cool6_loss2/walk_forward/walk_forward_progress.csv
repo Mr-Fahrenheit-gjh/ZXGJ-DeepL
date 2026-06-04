@@ -1,0 +1,10 @@
+event,fold,timestamp,selected_model,elapsed_seconds,output_dir,model,valid_buy_auc,valid_sell_auc,test_buy_auc,test_sell_auc,alpha_total_return,trade_count
+fold_started,0,2026-06-04T16:20:48.938890,,,output\diagnostics\lstm_param_experiments\lb16_h6_tp0p004_sl0p002_cool6_loss2\walk_forward\fold_000,,,,,,,
+model_completed,0,2026-06-04T16:21:16.572520,,27.048,output\diagnostics\lstm_param_experiments\lb16_h6_tp0p004_sl0p002_cool6_loss2\walk_forward\fold_000\models\lstm,lstm,0.5478845196615232,0.5499871478310991,0.46403820148749153,0.5337311014698207,,
+fold_completed,0,2026-06-04T16:21:18.222583,lstm,29.284,output\diagnostics\lstm_param_experiments\lb16_h6_tp0p004_sl0p002_cool6_loss2\walk_forward\fold_000,,,,0.46403820148749153,0.5337311014698207,-0.002858946430499998,10.0
+fold_started,1,2026-06-04T16:21:18.225677,,,output\diagnostics\lstm_param_experiments\lb16_h6_tp0p004_sl0p002_cool6_loss2\walk_forward\fold_001,,,,,,,
+model_completed,1,2026-06-04T16:21:44.287110,,25.525,output\diagnostics\lstm_param_experiments\lb16_h6_tp0p004_sl0p002_cool6_loss2\walk_forward\fold_001\models\lstm,lstm,0.5098715348208249,0.5695302337536902,0.5015583200162453,0.5767746018352495,,
+fold_completed,1,2026-06-04T16:21:45.893869,lstm,27.668,output\diagnostics\lstm_param_experiments\lb16_h6_tp0p004_sl0p002_cool6_loss2\walk_forward\fold_001,,,,0.5015583200162453,0.5767746018352495,0.0007726818329998331,1.0
+fold_started,2,2026-06-04T16:21:45.896872,,,output\diagnostics\lstm_param_experiments\lb16_h6_tp0p004_sl0p002_cool6_loss2\walk_forward\fold_002,,,,,,,
+model_completed,2,2026-06-04T16:22:25.648732,,39.139,output\diagnostics\lstm_param_experiments\lb16_h6_tp0p004_sl0p002_cool6_loss2\walk_forward\fold_002\models\lstm,lstm,0.5525281866099256,0.5906690574130717,0.49803178944969007,0.4790416984767514,,
+fold_completed,2,2026-06-04T16:22:27.248246,lstm,41.352,output\diagnostics\lstm_param_experiments\lb16_h6_tp0p004_sl0p002_cool6_loss2\walk_forward\fold_002,,,,0.49803178944969007,0.4790416984767514,-0.009116478385500004,12.0

@@ -1,0 +1,44 @@
+[
+  {
+    "fold": 0,
+    "train_start_pos": 0,
+    "train_end_pos": 4000,
+    "valid_start_pos": 4000,
+    "valid_end_pos": 4800,
+    "train_start": "2020-07-23 09:35:00",
+    "train_end": "2020-11-25 10:50:00",
+    "valid_start": "2020-11-25 10:55:00",
+    "valid_end": "2020-12-17 15:00:00",
+    "train_bars": 4000,
+    "valid_bars": 800,
+    "expanding": false
+  },
+  {
+    "fold": 1,
+    "train_start_pos": 800,
+    "train_end_pos": 4800,
+    "valid_start_pos": 4800,
+    "valid_end_pos": 5600,
+    "train_start": "2020-08-14 13:45:00",
+    "train_end": "2020-12-17 15:00:00",
+    "valid_start": "2020-12-18 09:35:00",
+    "valid_end": "2021-01-12 13:40:00",
+    "train_bars": 4000,
+    "valid_bars": 800,
+    "expanding": false
+  },
+  {
+    "fold": 2,
+    "train_start_pos": 1600,
+    "train_end_pos": 5600,
+    "valid_start_pos": 5600,
+    "valid_end_pos": 6400,
+    "train_start": "2020-09-08 10:55:00",
+    "train_end": "2021-01-12 13:40:00",
+    "valid_start": "2021-01-12 13:45:00",
+    "valid_end": "2021-02-04 10:50:00",
+    "train_bars": 4000,
+    "valid_bars": 800,
+    "expanding": false
+  }
+]

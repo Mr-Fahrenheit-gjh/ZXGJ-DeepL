@@ -1,0 +1,10 @@
+event,fold,timestamp,selected_model,elapsed_seconds,output_dir,model,valid_buy_auc,valid_sell_auc,test_buy_auc,test_sell_auc,alpha_total_return,trade_count
+fold_started,0,2026-06-04T16:25:07.350552,,,output\diagnostics\lstm_param_experiments\lb24_h6_tp0p004_sl0p003_cool6_loss2\walk_forward\fold_000,,,,,,,
+model_completed,0,2026-06-04T16:25:48.058599,,40.086,output\diagnostics\lstm_param_experiments\lb24_h6_tp0p004_sl0p003_cool6_loss2\walk_forward\fold_000\models\lstm,lstm,0.5443710325171655,0.5624545114083621,0.5079690136524008,0.5663186669380871,,
+fold_completed,0,2026-06-04T16:25:49.550255,lstm,42.2,output\diagnostics\lstm_param_experiments\lb24_h6_tp0p004_sl0p003_cool6_loss2\walk_forward\fold_000,,,,0.5079690136524008,0.5663186669380871,-0.0020669280389998823,4.0
+fold_started,1,2026-06-04T16:25:49.553266,,,output\diagnostics\lstm_param_experiments\lb24_h6_tp0p004_sl0p003_cool6_loss2\walk_forward\fold_001,,,,,,,
+model_completed,1,2026-06-04T16:26:35.708900,,45.568,output\diagnostics\lstm_param_experiments\lb24_h6_tp0p004_sl0p003_cool6_loss2\walk_forward\fold_001\models\lstm,lstm,0.5242828654701641,0.5728800127955331,0.46320997586484314,0.5537691305763595,,
+fold_completed,1,2026-06-04T16:26:37.287144,lstm,47.735,output\diagnostics\lstm_param_experiments\lb24_h6_tp0p004_sl0p003_cool6_loss2\walk_forward\fold_001,,,,0.46320997586484314,0.5537691305763595,-0.00013266972899994567,3.0
+fold_started,2,2026-06-04T16:26:37.290721,,,output\diagnostics\lstm_param_experiments\lb24_h6_tp0p004_sl0p003_cool6_loss2\walk_forward\fold_002,,,,,,,
+model_completed,2,2026-06-04T16:27:23.308281,,45.45,output\diagnostics\lstm_param_experiments\lb24_h6_tp0p004_sl0p003_cool6_loss2\walk_forward\fold_002\models\lstm,lstm,0.5666613032984714,0.5676354064908282,0.5363190155233555,0.4887688544639217,,
+fold_completed,2,2026-06-04T16:27:24.916491,lstm,47.627,output\diagnostics\lstm_param_experiments\lb24_h6_tp0p004_sl0p003_cool6_loss2\walk_forward\fold_002,,,,0.5363190155233555,0.4887688544639217,-0.002316940924499855,7.0

@@ -1,0 +1,9 @@
+{
+  "stage": "completed",
+  "status": "COMPLETED",
+  "updated_at": "2026-06-04T16:16:05.323139",
+  "details": {
+    "final_run_summary": "output\\diagnostics\\lstm_param_experiments\\lb32_h3_tp0p003_sl0p002_base\\final_run_summary.json",
+    "live_readiness_status": "FAIL"
+  }
+}

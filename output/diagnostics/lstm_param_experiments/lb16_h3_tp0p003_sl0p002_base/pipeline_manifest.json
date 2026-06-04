@@ -1,0 +1,138 @@
+{
+  "data_path": "C:\\Users\\79967\\Downloads\\中芯国际-深度学习分析\\ZXGJ-DeepL\\688981_5min_20200716-20260602.parquet",
+  "raw_shape": [
+    68304,
+    8
+  ],
+  "cleaned_market_shape": [
+    67968,
+    8
+  ],
+  "prepared_shape": [
+    67725,
+    250
+  ],
+  "index_start": "2020-07-23 09:35:00",
+  "index_end": "2026-06-01 14:45:00",
+  "feature_count": 194,
+  "feature_engineering_set": "basic",
+  "run_walk_forward": true,
+  "quick": false,
+  "feature_leakage_audit": {
+    "feature_count": 194,
+    "forbidden_keywords": [
+      "future",
+      "label",
+      "target",
+      "next",
+      "hit",
+      "exit_reason",
+      "exit_price",
+      "exit_bar"
+    ],
+    "suspicious_feature_count": 0,
+    "suspicious_features": [],
+    "passed": true
+  },
+  "market_data_cleaning_report": {
+    "status": "PASS",
+    "policy": {
+      "drop_entire_invalid_days": true,
+      "invalid_bar_rules": [
+        "null_ohlcv",
+        "nonpositive_price",
+        "nonpositive_volume",
+        "high_low_inconsistent",
+        "open_outside_range",
+        "close_outside_range",
+        "outside_session"
+      ]
+    },
+    "observed": {
+      "raw_rows": 68304,
+      "cleaned_rows": 67968,
+      "dropped_rows": 336,
+      "raw_trade_days": 1423,
+      "cleaned_trade_days": 1416,
+      "dropped_trade_days": 7,
+      "invalid_bar_count": 297,
+      "invalid_reason_counts": {
+        "null_ohlcv": 0,
+        "nonpositive_price": 288,
+        "nonpositive_volume": 297,
+        "high_low_inconsistent": 0,
+        "open_outside_range": 0,
+        "close_outside_range": 0,
+        "outside_session": 0
+      },
+      "first_invalid_timestamp": "2024-09-27 10:30:00",
+      "last_invalid_timestamp": "2025-09-08 15:00:00"
+    },
+    "hard_rule": "Invalid execution bars must be removed or independently justified before live deployment."
+  },
+  "execution_feasibility_audit": {
+    "status": "PASS",
+    "checks": {
+      "required_columns_present": true,
+      "datetime_index_monotonic": true,
+      "no_duplicate_timestamps": true,
+      "no_null_ohlcv_bars": true,
+      "no_nonpositive_price_bars": true,
+      "ohlc_ranges_consistent": true,
+      "zero_volume_ratio_within_limit": true,
+      "outside_session_ratio_within_limit": true,
+      "short_day_ratio_within_limit": true,
+      "extreme_daily_moves_within_limit": true
+    },
+    "observed": {
+      "row_count": 67968,
+      "trade_day_count": 1416,
+      "missing_required_cols": [],
+      "missing_optional_cols": [],
+      "duplicate_timestamps": 0,
+      "outside_session_bars": 0,
+      "outside_session_ratio": 0.0,
+      "null_ohlcv_bars": 0,
+      "nonpositive_price_bars": 0,
+      "zero_volume_bars": 0,
+      "zero_volume_ratio": 0.0,
+      "high_low_inconsistent": 0,
+      "open_outside_range": 0,
+      "close_outside_range": 0,
+      "short_day_count": 0,
+      "short_day_ratio": 0.0,
+      "max_bar_shortfall": 0,
+      "extreme_daily_move_count": 0,
+      "price_limit_checked_day_count": 1377,
+      "price_limit_skipped_gap_day_count": 38,
+      "max_abs_daily_return": 0.2940034512510785,
+      "max_abs_price_limit_checked_return": 0.1999467518636846
+    },
+    "thresholds": {
+      "expected_bars_per_day": 48,
+      "min_bars_per_day": 40,
+      "max_zero_volume_bar_ratio": 0.001,
+      "max_outside_session_bar_ratio": 0.0,
+      "max_short_day_ratio": 0.02,
+      "a_share_price_limit_rate": 0.2,
+      "price_limit_tolerance": 0.005,
+      "price_limit_check_max_gap_days": 3,
+      "max_extreme_daily_move_count": 0
+    },
+    "hard_rule": "No live deployment if execution feasibility audit fails."
+  },
+  "reproducibility_manifest": {
+    "data_sha256": "bc925d336dea3bf61c6399f8985aefb5437958fe845c1866bc26fbef2f297d0e",
+    "config_sha256": "b2184a1a6fd36208955d1ec6f9d47433a13555daa4ebfad24602b158c0ff9455",
+    "source_bundle_sha256": "1fb8734ed82a7ecbf6f1f191b17a98ea4d96e8dd61dde47ead6de7646d45c2dc",
+    "git_commit": "d38f9c7c568ae568f7cc1a736e232b05493a3fe0",
+    "git_branch": "main",
+    "git_dirty": true
+  },
+  "methodology": {
+    "numeric_conversion": "open/high/low/close/volume/amount are coerced to numeric before feature engineering",
+    "feature_engineering": "feature_engineering.build_feature_set and select_feature_columns",
+    "labeling": "path-dependent buy/sell opportunity labels with tp/sl/cost from MVP_CONFIG",
+    "validation": "optional walk-forward subtrain/calibration/out-of-sample test via walk_forward_runner"
+  }
+}

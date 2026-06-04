@@ -1,0 +1,51 @@
+{
+  "status": "PASS",
+  "checks": {
+    "required_columns_present": true,
+    "datetime_index_monotonic": true,
+    "no_duplicate_timestamps": true,
+    "no_null_ohlcv_bars": true,
+    "no_nonpositive_price_bars": true,
+    "ohlc_ranges_consistent": true,
+    "zero_volume_ratio_within_limit": true,
+    "outside_session_ratio_within_limit": true,
+    "short_day_ratio_within_limit": true,
+    "extreme_daily_moves_within_limit": true
+  },
+  "observed": {
+    "row_count": 67968,
+    "trade_day_count": 1416,
+    "missing_required_cols": [],
+    "missing_optional_cols": [],
+    "duplicate_timestamps": 0,
+    "outside_session_bars": 0,
+    "outside_session_ratio": 0.0,
+    "null_ohlcv_bars": 0,
+    "nonpositive_price_bars": 0,
+    "zero_volume_bars": 0,
+    "zero_volume_ratio": 0.0,
+    "high_low_inconsistent": 0,
+    "open_outside_range": 0,
+    "close_outside_range": 0,
+    "short_day_count": 0,
+    "short_day_ratio": 0.0,
+    "max_bar_shortfall": 0,
+    "extreme_daily_move_count": 0,
+    "price_limit_checked_day_count": 1377,
+    "price_limit_skipped_gap_day_count": 38,
+    "max_abs_daily_return": 0.2940034512510785,
+    "max_abs_price_limit_checked_return": 0.1999467518636846
+  },
+  "thresholds": {
+    "expected_bars_per_day": 48,
+    "min_bars_per_day": 40,
+    "max_zero_volume_bar_ratio": 0.001,
+    "max_outside_session_bar_ratio": 0.0,
+    "max_short_day_ratio": 0.02,
+    "a_share_price_limit_rate": 0.2,
+    "price_limit_tolerance": 0.005,
+    "price_limit_check_max_gap_days": 3,
+    "max_extreme_daily_move_count": 0
+  },
+  "hard_rule": "No live deployment if execution feasibility audit fails."
+}

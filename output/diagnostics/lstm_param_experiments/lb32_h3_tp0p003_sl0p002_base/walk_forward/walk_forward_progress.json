@@ -1,0 +1,20 @@
+{
+  "status": "completed",
+  "total_folds": 3,
+  "completed_folds": 3,
+  "current_fold": null,
+  "updated_at": "2026-06-04T16:16:05.285089",
+  "progress_file": "output\\diagnostics\\lstm_param_experiments\\lb32_h3_tp0p003_sl0p002_base\\walk_forward\\walk_forward_progress.csv",
+  "last_event": {
+    "event": "fold_completed",
+    "fold": 2,
+    "timestamp": "2026-06-04T16:16:05.277383",
+    "selected_model": "lstm",
+    "test_buy_auc": 0.5186795774647887,
+    "test_sell_auc": 0.5030685082552303,
+    "alpha_total_return": -0.004016189237999956,
+    "trade_count": 12,
+    "elapsed_seconds": 59.631,
+    "output_dir": "output\\diagnostics\\lstm_param_experiments\\lb32_h3_tp0p003_sl0p002_base\\walk_forward\\fold_002"
+  }
+}

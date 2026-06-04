@@ -1,0 +1,10 @@
+event,fold,timestamp,selected_model,elapsed_seconds,output_dir,model,valid_buy_auc,valid_sell_auc,test_buy_auc,test_sell_auc,alpha_total_return,trade_count
+fold_started,0,2026-06-04T16:10:44.315616,,,output\diagnostics\lstm_param_experiments\lb24_h3_tp0p003_sl0p002_cool6_loss2\walk_forward\fold_000,,,,,,,
+model_completed,0,2026-06-04T16:11:28.192507,,43.299,output\diagnostics\lstm_param_experiments\lb24_h3_tp0p003_sl0p002_cool6_loss2\walk_forward\fold_000\models\lstm,lstm,0.5363512000994901,0.544677550703843,0.5437966429790377,0.48255481709369596,,
+fold_completed,0,2026-06-04T16:11:29.749361,lstm,45.435,output\diagnostics\lstm_param_experiments\lb24_h3_tp0p003_sl0p002_cool6_loss2\walk_forward\fold_000,,,,0.5437966429790377,0.48255481709369596,-0.00724966160699958,14.0
+fold_started,1,2026-06-04T16:11:29.752351,,,output\diagnostics\lstm_param_experiments\lb24_h3_tp0p003_sl0p002_cool6_loss2\walk_forward\fold_001,,,,,,,
+model_completed,1,2026-06-04T16:12:13.928206,,43.621,output\diagnostics\lstm_param_experiments\lb24_h3_tp0p003_sl0p002_cool6_loss2\walk_forward\fold_001\models\lstm,lstm,0.546836130850802,0.5463626186953492,0.5140322513783526,0.4910155606046488,,
+fold_completed,1,2026-06-04T16:12:15.488457,lstm,45.736,output\diagnostics\lstm_param_experiments\lb24_h3_tp0p003_sl0p002_cool6_loss2\walk_forward\fold_001,,,,0.5140322513783526,0.4910155606046488,-0.003237706219499925,2.0
+fold_started,2,2026-06-04T16:12:15.492001,,,output\diagnostics\lstm_param_experiments\lb24_h3_tp0p003_sl0p002_cool6_loss2\walk_forward\fold_002,,,,,,,
+model_completed,2,2026-06-04T16:13:03.811254,,47.708,output\diagnostics\lstm_param_experiments\lb24_h3_tp0p003_sl0p002_cool6_loss2\walk_forward\fold_002\models\lstm,lstm,0.5727977448907681,0.5598305607121611,0.5288301997094198,0.5231521283474134,,
+fold_completed,2,2026-06-04T16:13:05.326376,lstm,49.835,output\diagnostics\lstm_param_experiments\lb24_h3_tp0p003_sl0p002_cool6_loss2\walk_forward\fold_002,,,,0.5288301997094198,0.5231521283474134,-0.006502513919999786,12.0

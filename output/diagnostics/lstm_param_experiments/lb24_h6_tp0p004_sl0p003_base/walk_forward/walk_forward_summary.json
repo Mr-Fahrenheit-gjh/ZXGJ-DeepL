@@ -1,0 +1,61 @@
+{
+  "model_names": [
+    "lstm"
+  ],
+  "split_count": 3,
+  "executed_fold_count": 3,
+  "mean_total_return": -0.02237534206742353,
+  "median_total_return": -0.05165200804709724,
+  "mean_alpha_total_return": -0.003276623350499682,
+  "median_alpha_total_return": -0.002907204298499555,
+  "mean_test_buy_auc": 0.48696428216523224,
+  "median_test_buy_auc": 0.4966099094953214,
+  "mean_test_sell_auc": 0.5300978985604764,
+  "median_test_sell_auc": 0.5128079887116032,
+  "total_trades": 30,
+  "stress_min_alpha_total_return": -0.008821952276499734,
+  "stress_worst_alpha_drawdown": -0.009068007112249976,
+  "quality_report": {
+    "gates": {
+      "min_folds": 3,
+      "min_total_trades": 30,
+      "min_median_test_buy_auc": 0.52,
+      "min_median_test_sell_auc": 0.52,
+      "min_median_alpha_return": 0.0,
+      "max_median_drawdown": -0.08,
+      "trade_direction_mode": "sell_only"
+    },
+    "observed": {
+      "fold_count": 3,
+      "total_trades": 30,
+      "median_test_buy_auc": 0.4966099094953214,
+      "median_test_sell_auc": 0.5128079887116032,
+      "median_alpha_return": -0.002907204298499555,
+      "median_max_drawdown": -0.0047292446217043205,
+      "drawdown_metric": "alpha_max_drawdown",
+      "return_metric": "alpha_total_return"
+    },
+    "checks": {
+      "enough_folds": true,
+      "enough_trades": true,
+      "buy_auc_above_gate": false,
+      "sell_auc_above_gate": false,
+      "direction_auc_above_gate": false,
+      "alpha_return_above_gate": false,
+      "drawdown_within_gate": true
+    },
+    "all_passed": false,
+    "note": "Research gate only. Passing this does not prove live-trading readiness."
+  },
+  "methodology": {
+    "split_policy": "chronological walk-forward by bar position; no random shuffle",
+    "fold_policy": "each train window is split into subtrain and calibration; fold validation is treated as out-of-sample test",
+    "preprocessing_policy": "winsorization and standardization are fit on subtrain only, then applied to calibration and test",
+    "threshold_policy": "buy/sell thresholds are calibration-set fixed quantiles, never selected from the fold test window",
+    "ensemble_policy": "model weights are proportional to validation AUC edge over 0.5; equal fallback if no model beats random",
+    "execution_policy": "signal at bar t, execute at next bar open with commission, slippage, lot size, no-overlap state machine, tp/sl and no-overnight handling",
+    "a_share_t0_policy": "default inventory mode starts with tradable base shares; same-day sells use existing inventory, buybacks restore inventory, and buy-first exits sell old inventory rather than same-day purchases",
+    "liquidity_policy": "single trade size is capped by max_participation_rate of next-bar volume when volume is available",
+    "explainability_policy": "optional per-fold permutation/SHAP for sklearn models and input-gradient importance for torch sequence models"
+  }
+}

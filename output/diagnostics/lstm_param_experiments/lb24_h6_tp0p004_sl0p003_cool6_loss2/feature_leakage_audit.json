@@ -1,0 +1,16 @@
+{
+  "feature_count": 194,
+  "forbidden_keywords": [
+    "future",
+    "label",
+    "target",
+    "next",
+    "hit",
+    "exit_reason",
+    "exit_price",
+    "exit_bar"
+  ],
+  "suspicious_feature_count": 0,
+  "suspicious_features": [],
+  "passed": true
+}

@@ -1,0 +1,10 @@
+event,fold,timestamp,selected_model,elapsed_seconds,output_dir,model,valid_buy_auc,valid_sell_auc,test_buy_auc,test_sell_auc,alpha_total_return,trade_count
+fold_started,0,2026-06-04T16:19:14.329334,,,output\diagnostics\lstm_param_experiments\lb16_h6_tp0p004_sl0p002_base\walk_forward\fold_000,,,,,,,
+model_completed,0,2026-06-04T16:19:41.645866,,26.744,output\diagnostics\lstm_param_experiments\lb16_h6_tp0p004_sl0p002_base\walk_forward\fold_000\models\lstm,lstm,0.5593247054919529,0.5447294423716537,0.4797413793103449,0.5422602681040325,,
+fold_completed,0,2026-06-04T16:19:43.218811,lstm,28.889,output\diagnostics\lstm_param_experiments\lb16_h6_tp0p004_sl0p002_base\walk_forward\fold_000,,,,0.4797413793103449,0.5422602681040325,-0.009707244436499729,13.0
+fold_started,1,2026-06-04T16:19:43.221915,,,output\diagnostics\lstm_param_experiments\lb16_h6_tp0p004_sl0p002_base\walk_forward\fold_001,,,,,,,
+model_completed,1,2026-06-04T16:20:09.450419,,25.729,output\diagnostics\lstm_param_experiments\lb16_h6_tp0p004_sl0p002_base\walk_forward\fold_001\models\lstm,lstm,0.5160919540229885,0.5590693471877117,0.4928794045716607,0.5800653939457863,,
+fold_completed,1,2026-06-04T16:20:11.026379,lstm,27.804,output\diagnostics\lstm_param_experiments\lb16_h6_tp0p004_sl0p002_base\walk_forward\fold_001,,,,0.4928794045716607,0.5800653939457863,0.0013295745045001084,3.0
+fold_started,2,2026-06-04T16:20:11.029433,,,output\diagnostics\lstm_param_experiments\lb16_h6_tp0p004_sl0p002_base\walk_forward\fold_002,,,,,,,
+model_completed,2,2026-06-04T16:20:42.001995,,30.388,output\diagnostics\lstm_param_experiments\lb16_h6_tp0p004_sl0p002_base\walk_forward\fold_002\models\lstm,lstm,0.5397526111792906,0.5953099180817776,0.4954805677564153,0.5216199512851274,,
+fold_completed,2,2026-06-04T16:20:43.570910,lstm,32.541,output\diagnostics\lstm_param_experiments\lb16_h6_tp0p004_sl0p002_base\walk_forward\fold_002,,,,0.4954805677564153,0.5216199512851274,-0.0016448061329999986,4.0

@@ -1,0 +1,2 @@
+leg_type,entry_time,exit_time,entry_price,exit_price,shares,position_pct,entry_prob,exit_prob,gross_return,net_return,exit_reason
+sell_first,2021-01-08 13:55:00,2021-01-08 14:20:00,60.719625,60.380175,4900,1.0,0.6261625289916992,0.5998985171318054,0.005621878373158085,0.0026218783731580845,take_profit_buyback
