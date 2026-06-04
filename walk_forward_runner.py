@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import time
 from pathlib import Path
 
 import numpy as np
@@ -29,6 +30,7 @@ from risk_management import (
     run_t0_dual_signal_backtest,
 )
 from validation import build_walk_forward_splits, export_walk_forward_splits
+from project_paths import display_project_path
 
 
 MODEL_TRAINERS = {
@@ -54,6 +56,30 @@ def _json_default(value):
     if pd.isna(value) if not isinstance(value, (list, dict, tuple, set)) else False:
         return None
     raise TypeError(f"Object of type {type(value).__name__} is not JSON serializable")
+
+
+def _write_walk_forward_progress(
+    output_dir: Path,
+    rows: list[dict],
+    total_folds: int,
+    current_status: str,
+    current_fold: int | None = None,
+) -> None:
+    output_dir.mkdir(parents=True, exist_ok=True)
+    progress_df = pd.DataFrame(rows)
+    progress_df.to_csv(output_dir / "walk_forward_progress.csv", index=False)
+    completed = int(sum(1 for row in rows if row.get("event") == "fold_completed"))
+    payload = {
+        "status": current_status,
+        "total_folds": int(total_folds),
+        "completed_folds": completed,
+        "current_fold": current_fold,
+        "updated_at": pd.Timestamp.now().isoformat(),
+        "progress_file": display_project_path(output_dir / "walk_forward_progress.csv"),
+        "last_event": rows[-1] if rows else None,
+    }
+    with open(output_dir / "walk_forward_progress.json", "w", encoding="utf-8") as f:
+        json.dump(payload, f, ensure_ascii=False, indent=2, default=_json_default)
 
 
 def _required_columns(feature_cols: list[str], buy_target_col: str, sell_target_col: str) -> list[str]:
@@ -375,11 +401,38 @@ def run_walk_forward_signal_research(
     model_names = model_names or list(config.get("walk_forward_model_names", ["logistic_regression", "random_forest"]))
     fold_rows = []
     fold_artifacts = []
+    progress_rows = []
+    total_folds = len(splits)
+    _write_walk_forward_progress(
+        output_dir,
+        progress_rows,
+        total_folds=total_folds,
+        current_status="started",
+        current_fold=None,
+    )
 
     for split in splits:
         fold = int(split["fold"])
+        fold_start_ts = time.time()
         fold_dir = output_dir / f"fold_{fold:03d}"
         fold_dir.mkdir(parents=True, exist_ok=True)
+        progress_rows.append(
+            {
+                "event": "fold_started",
+                "fold": fold,
+                "timestamp": pd.Timestamp.now().isoformat(),
+                "selected_model": None,
+                "elapsed_seconds": np.nan,
+                "output_dir": display_project_path(fold_dir),
+            }
+        )
+        _write_walk_forward_progress(
+            output_dir,
+            progress_rows,
+            total_folds=total_folds,
+            current_status="running",
+            current_fold=fold,
+        )
 
         train_window = data.iloc[split["train_start_pos"] : split["train_end_pos"]].copy()
         test_window = data.iloc[split["valid_start_pos"] : split["valid_end_pos"]].copy()
@@ -394,6 +447,7 @@ def run_walk_forward_signal_research(
 
         model_results = {}
         for model_name in model_names:
+            model_start_ts = time.time()
             model_results[model_name] = _train_fold_model(
                 model_name=model_name,
                 fold_data=fold_data,
@@ -403,6 +457,27 @@ def run_walk_forward_signal_research(
                 config=config,
                 output_dir=fold_dir / "models",
                 device=device,
+            )
+            progress_rows.append(
+                {
+                    "event": "model_completed",
+                    "fold": fold,
+                    "model": model_name,
+                    "timestamp": pd.Timestamp.now().isoformat(),
+                    "valid_buy_auc": model_results[model_name]["summary"].get("valid_buy_auc", np.nan),
+                    "valid_sell_auc": model_results[model_name]["summary"].get("valid_sell_auc", np.nan),
+                    "test_buy_auc": model_results[model_name]["summary"].get("test_buy_auc", np.nan),
+                    "test_sell_auc": model_results[model_name]["summary"].get("test_sell_auc", np.nan),
+                    "elapsed_seconds": round(time.time() - model_start_ts, 3),
+                    "output_dir": display_project_path(model_results[model_name].get("output_dir", "")),
+                }
+            )
+            _write_walk_forward_progress(
+                output_dir,
+                progress_rows,
+                total_folds=total_folds,
+                current_status="running",
+                current_fold=fold,
             )
 
         if len(model_results) >= 2:
@@ -482,7 +557,7 @@ def run_walk_forward_signal_research(
             "valid_sell_auc": signal_result["summary"].get("valid_sell_auc", np.nan),
             **stats,
             **stress_stats,
-            "output_dir": str(fold_dir),
+            "output_dir": display_project_path(fold_dir),
         }
         fold_rows.append(row)
         fold_artifacts.append(
@@ -493,11 +568,32 @@ def run_walk_forward_signal_research(
                 "t0_stats": stats,
                 "stress_stats": stress_stats,
                 "explainability_manifest": explainability_manifest,
-                "output_dir": str(fold_dir),
+                "output_dir": display_project_path(fold_dir),
             }
         )
         with open(fold_dir / "fold_manifest.json", "w", encoding="utf-8") as f:
             json.dump(fold_artifacts[-1], f, ensure_ascii=False, indent=2, default=_json_default)
+        progress_rows.append(
+            {
+                "event": "fold_completed",
+                "fold": fold,
+                "timestamp": pd.Timestamp.now().isoformat(),
+                "selected_model": selected_model_name,
+                "test_buy_auc": row.get("test_buy_auc", np.nan),
+                "test_sell_auc": row.get("test_sell_auc", np.nan),
+                "alpha_total_return": row.get("alpha_total_return", np.nan),
+                "trade_count": row.get("trade_count", 0),
+                "elapsed_seconds": round(time.time() - fold_start_ts, 3),
+                "output_dir": display_project_path(fold_dir),
+            }
+        )
+        _write_walk_forward_progress(
+            output_dir,
+            progress_rows,
+            total_folds=total_folds,
+            current_status="running",
+            current_fold=fold,
+        )
 
     fold_summary = pd.DataFrame(fold_rows)
     fold_summary.to_csv(output_dir / "walk_forward_fold_summary.csv", index=False)
@@ -536,6 +632,13 @@ def run_walk_forward_signal_research(
         json.dump(aggregate_summary["methodology"], f, ensure_ascii=False, indent=2)
     with open(output_dir / "walk_forward_artifacts.json", "w", encoding="utf-8") as f:
         json.dump(fold_artifacts, f, ensure_ascii=False, indent=2, default=_json_default)
+    _write_walk_forward_progress(
+        output_dir,
+        progress_rows,
+        total_folds=total_folds,
+        current_status="completed",
+        current_fold=None,
+    )
 
     return {
         "splits": split_df,

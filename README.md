@@ -78,6 +78,29 @@ python run_research_pipeline.py \
 outputs/diagnostics/research_pipeline
 ```
 
-## 5. 重要提醒
+## 5. 长任务进度查看
+
+长时间运行时，不需要盯终端。主流程会持续更新：
+
+```text
+outputs/diagnostics/<run_name>/pipeline_status.json
+outputs/diagnostics/<run_name>/walk_forward/walk_forward_progress.json
+outputs/diagnostics/<run_name>/walk_forward/walk_forward_progress.csv
+```
+
+Windows PowerShell 查看当前阶段：
+
+```powershell
+Get-Content outputs\diagnostics\<run_name>\pipeline_status.json
+Get-Content outputs\diagnostics\<run_name>\walk_forward\walk_forward_progress.json
+```
+
+跑完后最终总览会保存为：
+
+```text
+outputs/diagnostics/<run_name>/final_run_summary.json
+```
+
+## 6. 重要提醒
 
 `live_readiness_report.json` 是实盘前硬门槛文件。当前项目可以跑通研究闭环，但不代表已经可以真实投入资金。只有完整 walk-forward、压力测试、影子盘和 vn.py 交叉验证都稳定通过后，才可以进入小资金仿真阶段。

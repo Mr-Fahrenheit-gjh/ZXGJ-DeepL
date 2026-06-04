@@ -48,6 +48,77 @@ def _json_default(value):
     raise TypeError(f"Object of type {type(value).__name__} is not JSON serializable")
 
 
+def write_pipeline_status(
+    output_dir: Path,
+    stage: str,
+    status: str,
+    details: dict | None = None,
+) -> None:
+    output_dir.mkdir(parents=True, exist_ok=True)
+    payload = {
+        "stage": stage,
+        "status": status,
+        "updated_at": pd.Timestamp.now().isoformat(),
+        "details": details or {},
+    }
+    with (output_dir / "pipeline_status.json").open("w", encoding="utf-8") as f:
+        json.dump(payload, f, ensure_ascii=False, indent=2, default=_json_default)
+
+
+def write_final_run_summary(
+    output_dir: Path,
+    args: argparse.Namespace,
+    config: dict,
+    prepared_rows: int,
+    feature_count: int,
+    walk_forward_result: dict | None = None,
+    readiness_report: dict | None = None,
+    vnpy_report: dict | None = None,
+    optuna_report: dict | None = None,
+    report_path: Path | None = None,
+) -> dict:
+    summary = {
+        "status": "COMPLETED",
+        "completed_at": pd.Timestamp.now().isoformat(),
+        "output_dir": display_project_path(output_dir),
+        "data_path": display_project_path(args.data_path),
+        "prepared_rows": int(prepared_rows),
+        "feature_count": int(feature_count),
+        "run_options": {
+            "run_walk_forward": bool(args.run_walk_forward),
+            "full_model_suite": bool(args.full_model_suite),
+            "run_explainability": bool(args.run_explainability),
+            "run_vnpy_backtest": bool(args.run_vnpy_backtest),
+            "run_optuna": bool(args.run_optuna),
+            "max_folds": args.max_folds,
+            "device": args.device,
+            "model_names": args.model_names,
+        },
+        "config_core": {
+            "lookback": config.get("lookback"),
+            "horizon": config.get("horizon"),
+            "tp": config.get("tp"),
+            "sl": config.get("sl"),
+            "commission_rate": config.get("commission_rate"),
+            "slippage_rate": config.get("slippage_rate"),
+            "fixed_threshold_quantile": config.get("fixed_threshold_quantile"),
+        },
+        "walk_forward_summary": walk_forward_result.get("aggregate_summary") if walk_forward_result else None,
+        "live_readiness": readiness_report,
+        "vnpy_backtest": vnpy_report,
+        "optuna": optuna_report,
+        "walk_forward_report": display_project_path(report_path) if report_path else None,
+        "progress_files": {
+            "pipeline_status": display_project_path(output_dir / "pipeline_status.json"),
+            "walk_forward_progress": display_project_path(output_dir / "walk_forward" / "walk_forward_progress.json"),
+            "walk_forward_progress_csv": display_project_path(output_dir / "walk_forward" / "walk_forward_progress.csv"),
+        },
+    }
+    with (output_dir / "final_run_summary.json").open("w", encoding="utf-8") as f:
+        json.dump(summary, f, ensure_ascii=False, indent=2, default=_json_default)
+    return summary
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Run the 688981 T+0 research pipeline.")
     parser.add_argument(
@@ -293,7 +364,7 @@ def run_optional_vnpy_stage(
         return report
 
     best_row = fold_summary.sort_values("alpha_total_return", ascending=False).iloc[0]
-    fold_dir = Path(best_row["output_dir"])
+    fold_dir = resolve_project_path(best_row["output_dir"])
     model_name = str(best_row["selected_model"])
     signal_path = fold_dir / "models" / model_name / "test_signals.csv"
     if not signal_path.exists():
@@ -446,16 +517,38 @@ def main() -> None:
     output_dir = Path(args.output_dir)
     output_dir = resolve_project_path(output_dir)
     config = build_pipeline_config(args)
+    write_pipeline_status(
+        output_dir,
+        stage="start",
+        status="RUNNING",
+        details={
+            "data_path": display_project_path(args.data_path),
+            "output_dir": display_project_path(output_dir),
+            "run_walk_forward": bool(args.run_walk_forward),
+            "run_explainability": bool(args.run_explainability),
+            "run_vnpy_backtest": bool(args.run_vnpy_backtest),
+            "run_optuna": bool(args.run_optuna),
+        },
+    )
 
+    write_pipeline_status(output_dir, stage="load_and_prepare_data", status="RUNNING")
     raw_df = load_market_data(args.data_path)
     market_df, cleaning_report = clean_market_data_for_execution(raw_df, config, output_dir)
     prepared_df, feature_cols, metadata = prepare_research_dataset(market_df, config)
     export_pipeline_manifest(output_dir, args, config, raw_df, market_df, prepared_df, feature_cols, metadata, cleaning_report)
     if args.save_prepared_data:
         prepared_df.to_parquet(output_dir / "prepared_research_dataset.parquet")
+    write_pipeline_status(
+        output_dir,
+        stage="load_and_prepare_data",
+        status="COMPLETED",
+        details={"prepared_rows": int(len(prepared_df)), "feature_count": int(len(feature_cols))},
+    )
 
+    optuna_report = None
     if args.run_optuna:
-        run_optuna_from_pipeline(
+        write_pipeline_status(output_dir, stage="optuna", status="RUNNING")
+        optuna_report = run_optuna_from_pipeline(
             data=prepared_df,
             feature_cols=feature_cols,
             config=config,
@@ -463,8 +556,19 @@ def main() -> None:
             output_dir=output_dir / "optuna",
             device=args.device,
         )
+        write_pipeline_status(output_dir, stage="optuna", status="COMPLETED", details=optuna_report)
 
+    walk_forward_result = None
+    readiness_report = None
+    vnpy_report = None
+    report_path = None
     if args.run_walk_forward:
+        write_pipeline_status(
+            output_dir,
+            stage="walk_forward",
+            status="RUNNING",
+            details={"progress_file": display_project_path(output_dir / "walk_forward" / "walk_forward_progress.json")},
+        )
         walk_forward_result = run_walk_forward_signal_research(
             data=prepared_df,
             feature_cols=feature_cols,
@@ -472,6 +576,12 @@ def main() -> None:
             output_dir=output_dir / "walk_forward",
             model_names=config.get("walk_forward_model_names"),
             device=args.device,
+        )
+        write_pipeline_status(
+            output_dir,
+            stage="walk_forward",
+            status="COMPLETED",
+            details=walk_forward_result["aggregate_summary"],
         )
         with open(output_dir / "reproducibility_manifest.json", "r", encoding="utf-8") as f:
             reproducibility_manifest = json.load(f)
@@ -486,7 +596,9 @@ def main() -> None:
         )
         report_path = export_walk_forward_markdown_report(walk_forward_result["output_dir"])
         if args.run_vnpy_backtest:
+            write_pipeline_status(output_dir, stage="vnpy_backtest", status="RUNNING")
             vnpy_report = run_optional_vnpy_stage(walk_forward_result, config, output_dir)
+            write_pipeline_status(output_dir, stage="vnpy_backtest", status="COMPLETED", details=vnpy_report)
             print("vn.py backtest:")
             print(json.dumps(vnpy_report, ensure_ascii=False, indent=2, default=_json_default))
         print("Walk-forward summary:")
@@ -497,7 +609,29 @@ def main() -> None:
     else:
         print("Prepared research dataset only. Add --run-walk-forward to train and backtest.")
 
+    final_summary = write_final_run_summary(
+        output_dir=output_dir,
+        args=args,
+        config=config,
+        prepared_rows=len(prepared_df),
+        feature_count=len(feature_cols),
+        walk_forward_result=walk_forward_result,
+        readiness_report=readiness_report,
+        vnpy_report=vnpy_report,
+        optuna_report=optuna_report,
+        report_path=report_path,
+    )
+    write_pipeline_status(
+        output_dir,
+        stage="completed",
+        status="COMPLETED",
+        details={
+            "final_run_summary": display_project_path(output_dir / "final_run_summary.json"),
+            "live_readiness_status": readiness_report.get("status") if readiness_report else None,
+        },
+    )
     print(f"Output directory: {display_project_path(output_dir)}")
+    print(f"Final summary: {display_project_path(output_dir / 'final_run_summary.json')}")
     print(f"Prepared rows: {len(prepared_df)}, features: {len(feature_cols)}")
 
 
