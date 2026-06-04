@@ -251,12 +251,15 @@ def _train_fold_model(
 
 
 def evaluate_quality_gates(fold_summary: pd.DataFrame, config: dict) -> dict:
+    trade_direction_mode = str(config.get("trade_direction_mode", "both"))
     gates = {
         "min_folds": int(config.get("quality_min_folds", 3)),
         "min_total_trades": int(config.get("quality_min_total_trades", 30)),
         "min_median_test_buy_auc": float(config.get("quality_min_median_test_buy_auc", 0.52)),
+        "min_median_test_sell_auc": float(config.get("quality_min_median_test_sell_auc", 0.52)),
         "min_median_alpha_return": float(config.get("quality_min_median_alpha_return", 0.0)),
         "max_median_drawdown": float(config.get("quality_max_median_drawdown", -0.08)),
+        "trade_direction_mode": trade_direction_mode,
     }
     drawdown_col = "alpha_max_drawdown" if "alpha_max_drawdown" in fold_summary else "max_drawdown"
     alpha_return_col = "alpha_total_return" if "alpha_total_return" in fold_summary else "total_return"
@@ -264,16 +267,32 @@ def evaluate_quality_gates(fold_summary: pd.DataFrame, config: dict) -> dict:
         "fold_count": int(len(fold_summary)),
         "total_trades": int(fold_summary["trade_count"].sum()) if "trade_count" in fold_summary else 0,
         "median_test_buy_auc": float(fold_summary["test_buy_auc"].median()) if "test_buy_auc" in fold_summary and len(fold_summary) else np.nan,
+        "median_test_sell_auc": float(fold_summary["test_sell_auc"].median()) if "test_sell_auc" in fold_summary and len(fold_summary) else np.nan,
         "median_alpha_return": float(fold_summary[alpha_return_col].median()) if alpha_return_col in fold_summary and len(fold_summary) else np.nan,
         "median_max_drawdown": float(fold_summary[drawdown_col].median()) if drawdown_col in fold_summary and len(fold_summary) else np.nan,
         "drawdown_metric": drawdown_col,
         "return_metric": alpha_return_col,
     }
+    buy_auc_ok = (
+        pd.notna(observed["median_test_buy_auc"])
+        and observed["median_test_buy_auc"] >= gates["min_median_test_buy_auc"]
+    )
+    sell_auc_ok = (
+        pd.notna(observed["median_test_sell_auc"])
+        and observed["median_test_sell_auc"] >= gates["min_median_test_sell_auc"]
+    )
+    if trade_direction_mode == "sell_only":
+        direction_auc_ok = sell_auc_ok
+    elif trade_direction_mode == "buy_only":
+        direction_auc_ok = buy_auc_ok
+    else:
+        direction_auc_ok = buy_auc_ok and sell_auc_ok
     checks = {
         "enough_folds": observed["fold_count"] >= gates["min_folds"],
         "enough_trades": observed["total_trades"] >= gates["min_total_trades"],
-        "buy_auc_above_gate": pd.notna(observed["median_test_buy_auc"])
-        and observed["median_test_buy_auc"] >= gates["min_median_test_buy_auc"],
+        "buy_auc_above_gate": buy_auc_ok,
+        "sell_auc_above_gate": sell_auc_ok,
+        "direction_auc_above_gate": direction_auc_ok,
         "alpha_return_above_gate": pd.notna(observed["median_alpha_return"])
         and observed["median_alpha_return"] >= gates["min_median_alpha_return"],
         "drawdown_within_gate": pd.notna(observed["median_max_drawdown"])

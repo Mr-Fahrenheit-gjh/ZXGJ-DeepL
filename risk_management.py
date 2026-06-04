@@ -419,8 +419,10 @@ def run_a_share_inventory_t0_backtest(
                 qty = min(qty, volume_cap)
             return int(qty)
 
+        has_same_day_exit_bar = i + 2 < n and data.index[i + 2].normalize() == next_time.normalize()
+
         if active_leg is None:
-            if no_overnight and not same_day_next:
+            if no_overnight and (not same_day_next or not has_same_day_exit_bar):
                 continue
 
             buy_prob = float(data["buy_prob"].iloc[i])
@@ -492,6 +494,64 @@ def run_a_share_inventory_t0_backtest(
             qty = int(active_leg["qty"])
             entry_price = float(active_leg["entry_price"])
             exit_reason = None
+
+            if no_overnight and not same_day_next:
+                if leg_type == "sell_first":
+                    buy_price = close_price * (1 + slippage_rate)
+                    notional = qty * buy_price
+                    commission = notional * commission_rate
+                    if cash >= notional + commission:
+                        cash -= notional + commission
+                        shares += qty
+                        gross_return = entry_price / buy_price - 1
+                        net_return = gross_return - 2 * commission_rate - 2 * slippage_rate
+                        trades.append(
+                            {
+                                "leg_type": leg_type,
+                                "entry_time": active_leg["entry_time"],
+                                "exit_time": now,
+                                "entry_price": entry_price,
+                                "exit_price": buy_price,
+                                "shares": qty,
+                                "position_pct": float(active_leg["position_pct"]),
+                                "entry_prob": float(active_leg["entry_prob"]),
+                                "exit_prob": float(data["buy_prob"].iloc[i]),
+                                "gross_return": float(gross_return),
+                                "net_return": float(net_return),
+                                "exit_reason": "end_of_day_buyback",
+                            }
+                        )
+                        active_leg = None
+                else:
+                    qty = min(qty, tradable_shares)
+                    qty = cap_qty(qty)
+                    if qty > 0:
+                        sell_price = close_price * (1 - slippage_rate)
+                        notional = qty * sell_price
+                        commission = notional * commission_rate
+                        cash += notional - commission
+                        shares -= qty
+                        tradable_shares -= qty
+                        gross_return = sell_price / entry_price - 1
+                        net_return = gross_return - 2 * commission_rate - 2 * slippage_rate
+                        trades.append(
+                            {
+                                "leg_type": leg_type,
+                                "entry_time": active_leg["entry_time"],
+                                "exit_time": now,
+                                "entry_price": entry_price,
+                                "exit_price": sell_price,
+                                "shares": qty,
+                                "position_pct": float(active_leg["position_pct"]),
+                                "entry_prob": float(active_leg["entry_prob"]),
+                                "exit_prob": float(data["sell_prob"].iloc[i]),
+                                "gross_return": float(gross_return),
+                                "net_return": float(net_return),
+                                "exit_reason": "end_of_day_sell",
+                            }
+                        )
+                        active_leg = None
+                continue
 
             if leg_type == "sell_first":
                 gross_return_if_exit = entry_price / (next_open * (1 + slippage_rate)) - 1
@@ -573,6 +633,68 @@ def run_a_share_inventory_t0_backtest(
                 }
             )
             active_leg = None
+
+    if active_leg is not None and len(data):
+        last_time = data.index[-1]
+        last_close = float(data[price_col].iloc[-1])
+        leg_type = active_leg["type"]
+        qty = int(active_leg["qty"])
+        entry_price = float(active_leg["entry_price"])
+        if leg_type == "sell_first":
+            buy_price = last_close * (1 + slippage_rate)
+            notional = qty * buy_price
+            commission = notional * commission_rate
+            if cash >= notional + commission:
+                cash -= notional + commission
+                shares += qty
+                gross_return = entry_price / buy_price - 1
+                net_return = gross_return - 2 * commission_rate - 2 * slippage_rate
+                trades.append(
+                    {
+                        "leg_type": leg_type,
+                        "entry_time": active_leg["entry_time"],
+                        "exit_time": last_time,
+                        "entry_price": entry_price,
+                        "exit_price": buy_price,
+                        "shares": qty,
+                        "position_pct": float(active_leg["position_pct"]),
+                        "entry_prob": float(active_leg["entry_prob"]),
+                        "exit_prob": float(data["buy_prob"].iloc[-1]),
+                        "gross_return": float(gross_return),
+                        "net_return": float(net_return),
+                        "exit_reason": "final_buyback",
+                    }
+                )
+                active_leg = None
+        else:
+            qty = min(qty, tradable_shares)
+            qty = _round_lot_shares(qty, lot_size)
+            if qty > 0:
+                sell_price = last_close * (1 - slippage_rate)
+                notional = qty * sell_price
+                commission = notional * commission_rate
+                cash += notional - commission
+                shares -= qty
+                tradable_shares -= qty
+                gross_return = sell_price / entry_price - 1
+                net_return = gross_return - 2 * commission_rate - 2 * slippage_rate
+                trades.append(
+                    {
+                        "leg_type": leg_type,
+                        "entry_time": active_leg["entry_time"],
+                        "exit_time": last_time,
+                        "entry_price": entry_price,
+                        "exit_price": sell_price,
+                        "shares": qty,
+                        "position_pct": float(active_leg["position_pct"]),
+                        "entry_prob": float(active_leg["entry_prob"]),
+                        "exit_prob": float(data["sell_prob"].iloc[-1]),
+                        "gross_return": float(gross_return),
+                        "net_return": float(net_return),
+                        "exit_reason": "final_sell",
+                    }
+                )
+                active_leg = None
 
     equity = pd.Series(dict(equity_values), name="equity").sort_index()
     benchmark = pd.Series(dict(benchmark_values), name="benchmark_equity").sort_index()
