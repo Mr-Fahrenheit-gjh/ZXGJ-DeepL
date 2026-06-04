@@ -1,0 +1,13 @@
+{
+  "feature_count": 194,
+  "train_max_abs_mean": 1.5158245029548805e-15,
+  "train_median_std": 1.0,
+  "train_max_std_deviation_from_one": 1.0,
+  "train_zero_std_feature_count": 1,
+  "train_zero_std_features": [
+    "is_after_holiday"
+  ],
+  "valid_test_max_abs_mean": 1.9129288132949942,
+  "valid_test_max_abs_value": 9.967754902155232,
+  "nan_count_total": 0
+}

@@ -1,0 +1,43 @@
+{
+  "available": true,
+  "vnpy_info": {
+    "vnpy_ctastrategy": "True",
+    "core": "True"
+  },
+  "status": "PASS",
+  "selected_fold": 11,
+  "selected_model": "auc_weighted_ensemble",
+  "signal_file": "outputs\\diagnostics\\basic_bucket_test_15fold_sell_fix\\vnpy_backtest\\dual_signal.csv",
+  "signal_count": 152,
+  "stats": {
+    "start_date": "2020-10-14",
+    "end_date": "2020-10-19",
+    "total_days": 4,
+    "profit_days": 3,
+    "loss_days": 1,
+    "capital": 1000000.0,
+    "end_balance": 1000430.093,
+    "max_drawdown": 0.0,
+    "max_ddpercent": 0.0,
+    "max_drawdown_duration": 0,
+    "total_net_pnl": 430.0930000000014,
+    "daily_net_pnl": 107.52325000000035,
+    "total_commission": 87.90700000000001,
+    "daily_commission": 21.976750000000003,
+    "total_slippage": 75.0,
+    "daily_slippage": 18.75,
+    "total_turnover": 87907.0,
+    "daily_turnover": 21976.75,
+    "total_trade_count": 15,
+    "daily_trade_count": 3.75,
+    "total_return": 0.04300930000000758,
+    "annual_return": 2.5805580000004547,
+    "daily_return": 0.010750013412919915,
+    "return_std": 0.00943805772307227,
+    "sharpe_ratio": 17.645419912177573,
+    "ewm_sharpe": 17.73751677640124,
+    "return_drawdown_ratio": 0,
+    "rgr_ratio": 365.9582354289918
+  },
+  "console_log": "outputs\\diagnostics\\basic_bucket_test_15fold_sell_fix\\vnpy_backtest\\vnpy_console.log"
+}

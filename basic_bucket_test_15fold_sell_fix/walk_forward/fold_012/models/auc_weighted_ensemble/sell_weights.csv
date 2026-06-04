@@ -1,0 +1,5 @@
+model,side,valid_auc,raw_weight,weight,weight_method
+transformer_lstm,sell,0.5337962962962963,0.033796296296296324,0.29887410440122836,valid_auc_edge_over_0p5
+lstm,sell,0.4925925925925925,0.0,0.0,valid_auc_edge_over_0p5
+cnn,sell,0.47141203703703705,0.0,0.0,valid_auc_edge_over_0p5
+mlp,sell,0.5792824074074074,0.07928240740740744,0.7011258955987717,valid_auc_edge_over_0p5

@@ -1,0 +1,2 @@
+leg_type,entry_time,exit_time,entry_price,exit_price,shares,position_pct,entry_prob,exit_prob,gross_return,net_return,exit_reason
+sell_first,2020-08-21 09:40:00,2020-08-21 10:00:00,72.79358500000001,72.626295,4100,1.0,0.46815473480476977,0.5642464911313756,0.0023034356908886444,-0.0016965643091113557,buy_signal_buyback
