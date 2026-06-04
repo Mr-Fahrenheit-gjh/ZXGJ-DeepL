@@ -27,6 +27,7 @@ from risk_management import (
     export_t0_backtest_result,
     run_a_share_inventory_t0_backtest,
     run_inventory_t0_stress_grid,
+    run_sell_only_threshold_grid,
     run_t0_dual_signal_backtest,
 )
 from validation import build_walk_forward_splits, export_walk_forward_splits
@@ -510,8 +511,10 @@ def run_walk_forward_signal_research(
                 device=device,
             )
 
-        buy_threshold = float(signal_result["valid_signals"]["buy_prob"].quantile(config.get("fixed_threshold_quantile", 0.95)))
-        sell_threshold = float(signal_result["valid_signals"]["sell_prob"].quantile(config.get("fixed_threshold_quantile", 0.95)))
+        buy_quantile = float(config.get("buy_threshold_quantile", config.get("fixed_threshold_quantile", 0.95)))
+        sell_quantile = float(config.get("sell_threshold_quantile", config.get("fixed_threshold_quantile", 0.95)))
+        buy_threshold = float(signal_result["valid_signals"]["buy_prob"].quantile(buy_quantile))
+        sell_threshold = float(signal_result["valid_signals"]["sell_prob"].quantile(sell_quantile))
         if config.get("a_share_t0_mode", "inventory") == "inventory":
             trades, equity, stats = run_a_share_inventory_t0_backtest(
                 signal_result["test_signals"],
@@ -527,6 +530,23 @@ def run_walk_forward_signal_research(
                 config=config,
             )
         export_t0_backtest_result(fold_dir / "t0_backtest", trades, equity, stats)
+        sell_threshold_grid_stats = {}
+        if config.get("run_sell_threshold_grid", False) and config.get("a_share_t0_mode", "inventory") == "inventory":
+            sell_threshold_grid = run_sell_only_threshold_grid(
+                valid_signals=signal_result["valid_signals"],
+                test_signals=signal_result["test_signals"],
+                config=config,
+                output_dir=fold_dir / "sell_only_threshold_grid",
+            )
+            if len(sell_threshold_grid):
+                best_grid_row = sell_threshold_grid.iloc[0].to_dict()
+                sell_threshold_grid_stats = {
+                    "sell_grid_best_rule": best_grid_row.get("rule_name"),
+                    "sell_grid_best_quantile": best_grid_row.get("sell_quantile"),
+                    "sell_grid_best_alpha_total_return": best_grid_row.get("alpha_total_return"),
+                    "sell_grid_best_trade_count": best_grid_row.get("trade_count"),
+                    "sell_grid_result_count": int(len(sell_threshold_grid)),
+                }
         if config.get("a_share_t0_mode", "inventory") == "inventory":
             stress_df = run_inventory_t0_stress_grid(
                 signal_result["test_signals"],
@@ -566,6 +586,7 @@ def run_walk_forward_signal_research(
             "valid_sell_auc": signal_result["summary"].get("valid_sell_auc", np.nan),
             **stats,
             **stress_stats,
+            **sell_threshold_grid_stats,
             "output_dir": display_project_path(fold_dir),
         }
         fold_rows.append(row)
@@ -576,6 +597,7 @@ def run_walk_forward_signal_research(
                 "selected_model_summary": signal_result["summary"],
                 "t0_stats": stats,
                 "stress_stats": stress_stats,
+                "sell_threshold_grid_stats": sell_threshold_grid_stats,
                 "normalization_summary": normalization_summary,
                 "explainability_manifest": explainability_manifest,
                 "output_dir": display_project_path(fold_dir),

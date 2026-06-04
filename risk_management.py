@@ -359,6 +359,11 @@ def run_a_share_inventory_t0_backtest(
     high_quantile = float(config.get("position_sizing_high_quantile", 0.99))
     buy_high_threshold = float(data["buy_prob"].quantile(high_quantile))
     sell_high_threshold = float(data["sell_prob"].quantile(high_quantile))
+    trade_direction_mode = str(config.get("trade_direction_mode", "both"))
+    if trade_direction_mode not in {"both", "sell_only", "buy_only"}:
+        raise ValueError(f"unsupported trade_direction_mode: {trade_direction_mode}")
+    allow_sell_first = trade_direction_mode in {"both", "sell_only"}
+    allow_buy_first = trade_direction_mode in {"both", "buy_only"}
 
     first_open = float(data[entry_price_col].iloc[0])
     if pd.isna(first_open) or first_open <= 0:
@@ -435,7 +440,12 @@ def run_a_share_inventory_t0_backtest(
                 max_position_pct,
             )
 
-            if sell_prob >= sell_threshold and tradable_shares >= lot_size and sell_position_pct >= buy_position_pct:
+            if (
+                allow_sell_first
+                and sell_prob >= sell_threshold
+                and tradable_shares >= lot_size
+                and sell_position_pct >= buy_position_pct
+            ):
                 qty_budget = initial_capital * max_t0_trade_pct * sell_position_pct / next_open
                 qty = cap_qty(min(qty_budget, tradable_shares))
                 if qty <= 0:
@@ -456,7 +466,7 @@ def run_a_share_inventory_t0_backtest(
                 }
                 continue
 
-            if buy_prob >= buy_threshold and cash > 0 and tradable_shares >= lot_size:
+            if allow_buy_first and buy_prob >= buy_threshold and cash > 0 and tradable_shares >= lot_size:
                 qty_budget = initial_capital * max_t0_trade_pct * buy_position_pct / next_open
                 cash_budget = cash / (next_open * (1 + slippage_rate) * (1 + commission_rate))
                 qty = cap_qty(min(qty_budget, cash_budget, tradable_shares))
@@ -587,6 +597,7 @@ def run_a_share_inventory_t0_backtest(
     stats.update(
         {
             "backtest_mode": "a_share_inventory_t0",
+            "trade_direction_mode": trade_direction_mode,
             "buy_threshold": float(buy_threshold),
             "sell_threshold": float(sell_threshold),
             "initial_capital": initial_capital,
@@ -688,3 +699,58 @@ def run_inventory_t0_stress_grid(
     with open(output_dir / "stress_test_aggregate.json", "w", encoding="utf-8") as f:
         json.dump(aggregate, f, ensure_ascii=False, indent=2)
     return stress_df
+
+
+def run_sell_only_threshold_grid(
+    valid_signals: pd.DataFrame,
+    test_signals: pd.DataFrame,
+    config: dict,
+    output_dir: str | Path,
+) -> pd.DataFrame:
+    """Evaluate sell-only inventory T+0 over sell probability quantiles.
+
+    Thresholds are selected from valid_signals and evaluated on test_signals to
+    avoid using test outcomes or test probability distribution for selection.
+    """
+    output_dir = Path(output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    sell_quantiles = config.get("sell_threshold_grid_quantiles", [0.90, 0.92, 0.94, 0.95, 0.96, 0.97])
+    buy_quantile = float(config.get("buy_threshold_quantile", config.get("fixed_threshold_quantile", 0.95)))
+    buy_threshold = float(valid_signals["buy_prob"].quantile(buy_quantile))
+    rows = []
+    for sell_quantile in sell_quantiles:
+        sell_quantile = float(sell_quantile)
+        sell_threshold = float(valid_signals["sell_prob"].quantile(sell_quantile))
+        scenario_config = dict(config)
+        scenario_config["trade_direction_mode"] = "sell_only"
+        trades, equity, stats = run_a_share_inventory_t0_backtest(
+            test_signals,
+            buy_threshold=buy_threshold,
+            sell_threshold=sell_threshold,
+            config=scenario_config,
+        )
+        scenario_name = f"sell_only_q{int(round(sell_quantile * 100)):02d}"
+        scenario_dir = output_dir / scenario_name
+        export_t0_backtest_result(scenario_dir, trades, equity, stats)
+        row = {
+            "rule_name": scenario_name,
+            "trade_direction_mode": "sell_only",
+            "buy_quantile": buy_quantile,
+            "sell_quantile": sell_quantile,
+            "buy_threshold": buy_threshold,
+            "sell_threshold": sell_threshold,
+            **stats,
+            "output_dir": str(scenario_dir),
+        }
+        rows.append(row)
+
+    result = pd.DataFrame(rows)
+    if len(result):
+        sort_cols = [c for c in ["alpha_total_return", "alpha_sharpe"] if c in result.columns]
+        if sort_cols:
+            result = result.sort_values(sort_cols, ascending=[False] * len(sort_cols))
+    result.to_csv(output_dir / "sell_only_threshold_grid.csv", index=False)
+    with open(output_dir / "sell_only_threshold_grid.json", "w", encoding="utf-8") as f:
+        json.dump(result.to_dict(orient="records"), f, ensure_ascii=False, indent=2, default=str)
+    return result

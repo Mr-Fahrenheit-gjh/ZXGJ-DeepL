@@ -95,9 +95,11 @@ def suggest_walk_forward_config(trial, base_config: dict, model_names: list[str]
     config = dict(base_config)
     names = set(model_names)
 
-    config["fixed_threshold_quantile"] = trial.suggest_categorical(
-        "fixed_threshold_quantile",
-        [0.90, 0.93, 0.95, 0.97, 0.98],
+    config["trade_direction_mode"] = trial.suggest_categorical("trade_direction_mode", ["sell_only"])
+    config["buy_threshold_quantile"] = trial.suggest_categorical("buy_threshold_quantile", [0.95])
+    config["sell_threshold_quantile"] = trial.suggest_categorical(
+        "sell_threshold_quantile",
+        [0.90, 0.92, 0.94, 0.95, 0.96, 0.97],
     )
     config["position_sizing_high_quantile"] = trial.suggest_categorical(
         "position_sizing_high_quantile",

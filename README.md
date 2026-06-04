@@ -69,6 +69,23 @@ ta        TA 库指标特征，已过滤绝对价格/成交量水平
 basic_ta  两套特征合并，用于对照实验
 ```
 
+当前默认交易方向暂时切到：
+
+```text
+trade_direction_mode = sell_only
+```
+
+也就是只允许高抛底仓后回补，暂时禁用低吸买入开仓。buy 方向代码仍然保留，可在 `mvp_config.py` 中把 `trade_direction_mode` 改回 `both` 或 `buy_only`。
+
+每个 walk-forward fold 会自动输出 sell-only 阈值网格：
+
+```text
+outputs/diagnostics/<run_name>/walk_forward/fold_000/sell_only_threshold_grid/sell_only_threshold_grid.csv
+outputs/diagnostics/<run_name>/walk_forward/fold_000/sell_only_threshold_grid/sell_only_threshold_grid.json
+```
+
+概率分桶诊断默认关闭，避免和当前 sell-only 阈值实验混淆。需要时再打开 `run_probability_bucket_analysis=True`。
+
 ## 3. 题目完整模型族验证
 
 ```bash

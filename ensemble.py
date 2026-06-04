@@ -108,7 +108,7 @@ def build_ensemble_signal_result(
 
     group_analysis = build_signal_group_analysis(test_signals)
     threshold_diagnostics = build_signal_threshold_diagnostics(test_signals)
-    probability_bucket_analysis = build_probability_bucket_analysis(test_signals)
+    probability_bucket_analysis = None
 
     signal_cols = [
         "buy_prob",
@@ -128,7 +128,9 @@ def build_ensemble_signal_result(
     sell_weights.to_csv(output_dir / "sell_weights.csv", index=False)
     group_analysis.to_csv(output_dir / "signal_group_analysis.csv", index=False)
     threshold_diagnostics.to_csv(output_dir / "signal_threshold_diagnostics.csv", index=False)
-    probability_bucket_analysis.to_csv(output_dir / "probability_bucket_analysis.csv", index=False)
+    if config.get("run_probability_bucket_analysis", False):
+        probability_bucket_analysis = build_probability_bucket_analysis(test_signals)
+        probability_bucket_analysis.to_csv(output_dir / "probability_bucket_analysis.csv", index=False)
     with open(output_dir / "signal_summary.json", "w", encoding="utf-8") as f:
         json.dump(summary, f, ensure_ascii=False, indent=2)
 
