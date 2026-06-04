@@ -61,6 +61,10 @@ python run_research_pipeline.py \
   --output-dir outputs/diagnostics/smoke_ta_features
 ```
 
+```
+python run_research_pipeline.py --run-walk-forward --max-folds 3 --full-model-suite  --run-vnpy-backtest  --output-dir outputs/diagnostics/research_full
+```
+
 可选特征集：
 
 ```text
