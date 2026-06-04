@@ -357,6 +357,10 @@ def run_a_share_inventory_t0_backtest(
     min_position_pct = float(config.get("min_position_pct", 0.25))
     max_position_pct = float(config.get("max_position_pct", 1.0))
     high_quantile = float(config.get("position_sizing_high_quantile", 0.99))
+    stop_loss_cooldown_bars = int(config.get("stop_loss_cooldown_bars", 0) or 0)
+    daily_max_trades = int(config.get("daily_max_trades", 0) or 0)
+    daily_max_losses = int(config.get("daily_max_losses", 0) or 0)
+    daily_loss_limit = float(config.get("daily_loss_limit", 0.0) or 0.0)
     buy_high_threshold = float(data["buy_prob"].quantile(high_quantile))
     sell_high_threshold = float(data["sell_prob"].quantile(high_quantile))
     trade_direction_mode = str(config.get("trade_direction_mode", "both"))
@@ -383,6 +387,32 @@ def run_a_share_inventory_t0_backtest(
     prev_equity = initial_capital
     prev_alpha_equity = initial_capital
     current_day = None
+    daily_trade_count = 0
+    daily_loss_count = 0
+    daily_net_return_sum = 0.0
+    cooldown_until_i = -1
+
+    def record_trade(trade: dict, bar_i: int) -> None:
+        nonlocal daily_trade_count, daily_loss_count, daily_net_return_sum, cooldown_until_i
+        trades.append(trade)
+        net_return = float(trade.get("net_return", 0.0))
+        daily_trade_count += 1
+        daily_net_return_sum += net_return
+        if net_return < 0:
+            daily_loss_count += 1
+        if stop_loss_cooldown_bars > 0 and str(trade.get("exit_reason", "")).startswith("stop_loss"):
+            cooldown_until_i = max(cooldown_until_i, bar_i + stop_loss_cooldown_bars)
+
+    def risk_block_new_entry(bar_i: int) -> bool:
+        if stop_loss_cooldown_bars > 0 and bar_i <= cooldown_until_i:
+            return True
+        if daily_max_trades > 0 and daily_trade_count >= daily_max_trades:
+            return True
+        if daily_max_losses > 0 and daily_loss_count >= daily_max_losses:
+            return True
+        if daily_loss_limit < 0 and daily_net_return_sum <= daily_loss_limit:
+            return True
+        return False
 
     n = len(data)
     for i in range(n):
@@ -390,6 +420,9 @@ def run_a_share_inventory_t0_backtest(
         if current_day is None or now.normalize() != current_day:
             current_day = now.normalize()
             tradable_shares = shares
+            daily_trade_count = 0
+            daily_loss_count = 0
+            daily_net_return_sum = 0.0
 
         close_price = float(data[price_col].iloc[i])
         equity = cash + shares * close_price
@@ -423,6 +456,8 @@ def run_a_share_inventory_t0_backtest(
 
         if active_leg is None:
             if no_overnight and (not same_day_next or not has_same_day_exit_bar):
+                continue
+            if risk_block_new_entry(i):
                 continue
 
             buy_prob = float(data["buy_prob"].iloc[i])
@@ -505,7 +540,7 @@ def run_a_share_inventory_t0_backtest(
                         shares += qty
                         gross_return = entry_price / buy_price - 1
                         net_return = gross_return - 2 * commission_rate - 2 * slippage_rate
-                        trades.append(
+                        record_trade(
                             {
                                 "leg_type": leg_type,
                                 "entry_time": active_leg["entry_time"],
@@ -519,7 +554,8 @@ def run_a_share_inventory_t0_backtest(
                                 "gross_return": float(gross_return),
                                 "net_return": float(net_return),
                                 "exit_reason": "end_of_day_buyback",
-                            }
+                            },
+                            i,
                         )
                         active_leg = None
                 else:
@@ -534,7 +570,7 @@ def run_a_share_inventory_t0_backtest(
                         tradable_shares -= qty
                         gross_return = sell_price / entry_price - 1
                         net_return = gross_return - 2 * commission_rate - 2 * slippage_rate
-                        trades.append(
+                        record_trade(
                             {
                                 "leg_type": leg_type,
                                 "entry_time": active_leg["entry_time"],
@@ -548,7 +584,8 @@ def run_a_share_inventory_t0_backtest(
                                 "gross_return": float(gross_return),
                                 "net_return": float(net_return),
                                 "exit_reason": "end_of_day_sell",
-                            }
+                            },
+                            i,
                         )
                         active_leg = None
                 continue
@@ -574,7 +611,7 @@ def run_a_share_inventory_t0_backtest(
                 shares += qty
                 gross_return = entry_price / buy_price - 1
                 net_return = gross_return - 2 * commission_rate - 2 * slippage_rate
-                trades.append(
+                record_trade(
                     {
                         "leg_type": leg_type,
                         "entry_time": active_leg["entry_time"],
@@ -588,7 +625,8 @@ def run_a_share_inventory_t0_backtest(
                         "gross_return": float(gross_return),
                         "net_return": float(net_return),
                         "exit_reason": exit_reason,
-                    }
+                    },
+                    i,
                 )
                 active_leg = None
                 continue
@@ -616,7 +654,7 @@ def run_a_share_inventory_t0_backtest(
             tradable_shares -= qty
             gross_return = sell_price / entry_price - 1
             net_return = gross_return - 2 * commission_rate - 2 * slippage_rate
-            trades.append(
+            record_trade(
                 {
                     "leg_type": leg_type,
                     "entry_time": active_leg["entry_time"],
@@ -630,7 +668,8 @@ def run_a_share_inventory_t0_backtest(
                     "gross_return": float(gross_return),
                     "net_return": float(net_return),
                     "exit_reason": exit_reason,
-                }
+                },
+                i,
             )
             active_leg = None
 
@@ -649,7 +688,7 @@ def run_a_share_inventory_t0_backtest(
                 shares += qty
                 gross_return = entry_price / buy_price - 1
                 net_return = gross_return - 2 * commission_rate - 2 * slippage_rate
-                trades.append(
+                record_trade(
                     {
                         "leg_type": leg_type,
                         "entry_time": active_leg["entry_time"],
@@ -663,7 +702,8 @@ def run_a_share_inventory_t0_backtest(
                         "gross_return": float(gross_return),
                         "net_return": float(net_return),
                         "exit_reason": "final_buyback",
-                    }
+                    },
+                    n - 1,
                 )
                 active_leg = None
         else:
@@ -678,7 +718,7 @@ def run_a_share_inventory_t0_backtest(
                 tradable_shares -= qty
                 gross_return = sell_price / entry_price - 1
                 net_return = gross_return - 2 * commission_rate - 2 * slippage_rate
-                trades.append(
+                record_trade(
                     {
                         "leg_type": leg_type,
                         "entry_time": active_leg["entry_time"],
@@ -692,7 +732,8 @@ def run_a_share_inventory_t0_backtest(
                         "gross_return": float(gross_return),
                         "net_return": float(net_return),
                         "exit_reason": "final_sell",
-                    }
+                    },
+                    n - 1,
                 )
                 active_leg = None
 
@@ -740,6 +781,10 @@ def run_a_share_inventory_t0_backtest(
             "slippage_rate": slippage_rate,
             "tp": tp,
             "sl": sl,
+            "stop_loss_cooldown_bars": int(stop_loss_cooldown_bars),
+            "daily_max_trades": int(daily_max_trades),
+            "daily_max_losses": int(daily_max_losses),
+            "daily_loss_limit": float(daily_loss_limit),
             "no_overnight": bool(no_overnight),
         }
     )

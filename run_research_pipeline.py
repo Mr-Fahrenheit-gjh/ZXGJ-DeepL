@@ -167,11 +167,31 @@ def parse_args() -> argparse.Namespace:
         help="Feature engineering set: built-in basic features, TA-library features, or both.",
     )
     parser.add_argument("--max-folds", type=int, default=None, help="Limit walk-forward folds.")
+    parser.add_argument("--lookback", type=int, default=None, help="Override sequence lookback bars.")
+    parser.add_argument("--horizon", type=int, default=None, help="Override label horizon bars.")
+    parser.add_argument("--tp", type=float, default=None, help="Override take-profit rate.")
+    parser.add_argument("--sl", type=float, default=None, help="Override stop-loss rate.")
+    parser.add_argument("--max-epochs", type=int, default=None, help="Override max training epochs.")
+    parser.add_argument("--train-bars", type=int, default=None, help="Override walk-forward train bars.")
+    parser.add_argument("--valid-bars", type=int, default=None, help="Override walk-forward validation/test bars.")
+    parser.add_argument("--step-bars", type=int, default=None, help="Override walk-forward step bars.")
+    parser.add_argument("--sell-threshold-quantile", type=float, default=None, help="Override sell signal threshold quantile.")
+    parser.add_argument("--buy-threshold-quantile", type=float, default=None, help="Override buy signal threshold quantile.")
+    parser.add_argument(
+        "--trade-direction-mode",
+        default=None,
+        choices=["both", "sell_only", "buy_only"],
+        help="Override T+0 opening direction mode.",
+    )
+    parser.add_argument("--stop-loss-cooldown-bars", type=int, default=None, help="Bars to wait after a stop-loss before opening a new T+0 leg.")
+    parser.add_argument("--daily-max-trades", type=int, default=None, help="Maximum T+0 round trips per day; 0 disables.")
+    parser.add_argument("--daily-max-losses", type=int, default=None, help="Maximum losing T+0 trades per day; 0 disables.")
+    parser.add_argument("--daily-loss-limit", type=float, default=None, help="Daily summed net_return loss limit; 0 disables.")
     parser.add_argument("--device", default=None, help="Torch device for deep sequence models.")
     parser.add_argument(
         "--full-model-suite",
         action="store_true",
-        help="Run Transformer-LSTM, LSTM, CNN, MLP, random forest, and logistic regression.",
+        help="Run Transformer-LSTM, LSTM, CNN, and MLP.",
     )
     parser.add_argument(
         "--run-optuna",
@@ -252,6 +272,26 @@ def build_pipeline_config(args: argparse.Namespace) -> dict:
         )
     if args.max_folds is not None:
         overrides["walk_forward_max_folds"] = args.max_folds
+    for arg_name, config_name in [
+        ("lookback", "lookback"),
+        ("horizon", "horizon"),
+        ("tp", "tp"),
+        ("sl", "sl"),
+        ("max_epochs", "max_epochs"),
+        ("train_bars", "walk_forward_train_bars"),
+        ("valid_bars", "walk_forward_valid_bars"),
+        ("step_bars", "walk_forward_step_bars"),
+        ("sell_threshold_quantile", "sell_threshold_quantile"),
+        ("buy_threshold_quantile", "buy_threshold_quantile"),
+        ("trade_direction_mode", "trade_direction_mode"),
+        ("stop_loss_cooldown_bars", "stop_loss_cooldown_bars"),
+        ("daily_max_trades", "daily_max_trades"),
+        ("daily_max_losses", "daily_max_losses"),
+        ("daily_loss_limit", "daily_loss_limit"),
+    ]:
+        value = getattr(args, arg_name)
+        if value is not None:
+            overrides[config_name] = value
     if args.model_names:
         overrides["walk_forward_model_names"] = args.model_names
     if args.feature_set:
