@@ -1,0 +1,252 @@
+2026-06-04 10:53:24.149354      开始加载历史数据
+2026-06-04 10:53:24.149354      加载进度：# [0%]
+2026-06-04 10:53:24.176320      加载进度：# [9%]
+2026-06-04 10:53:24.179609      加载进度：## [17%]
+2026-06-04 10:53:24.182929      加载进度：### [26%]
+2026-06-04 10:53:24.186609      加载进度：#### [35%]
+2026-06-04 10:53:24.189916      加载进度：##### [43%]
+2026-06-04 10:53:24.192266      加载进度：###### [52%]
+2026-06-04 10:53:24.194721      加载进度：####### [61%]
+2026-06-04 10:53:24.197071      加载进度：####### [70%]
+2026-06-04 10:53:24.200376      加载进度：######## [78%]
+2026-06-04 10:53:24.203251      加载进度：######### [87%]
+2026-06-04 10:53:24.206725      加载进度：########## [96%]
+2026-06-04 10:53:24.207853      历史数据加载完成，数据量：2368
+2026-06-04 10:53:24.214998      策略初始化完成
+2026-06-04 10:53:24.214998      开始回放历史数据
+2026-06-04 10:53:24.216023      回放进度：= [0%]
+2026-06-04 10:53:24.217095      回放进度：== [10%]
+2026-06-04 10:53:24.217095      回放进度：=== [20%]
+2026-06-04 10:53:24.218101      回放进度：==== [30%]
+2026-06-04 10:53:24.218669      回放进度：===== [40%]
+2026-06-04 10:53:24.218669      回放进度：====== [50%]
+2026-06-04 10:53:24.219685      回放进度：======= [60%]
+2026-06-04 10:53:24.219685      回放进度：======== [70%]
+2026-06-04 10:53:24.219685      回放进度：========= [80%]
+2026-06-04 10:53:24.220682      回放进度：========== [90%]
+2026-06-04 10:53:24.220682      回放进度：=========== [100%]
+2026-06-04 10:53:24.220682      历史数据回放结束
+2026-06-04 10:53:24.220682      开始计算逐日盯市盈亏
+2026-06-04 10:53:24.220682      逐日盯市盈亏计算完成
+2026-06-04 10:53:24.220682      开始计算策略统计指标
+2026-06-04 10:53:24.226335      策略统计指标计算完成
+vn.py backtest:
+{
+  "available": true,
+  "vnpy_info": {
+    "vnpy_ctastrategy": "True",
+    "core": "True"
+  },
+  "status": "PASS",
+  "selected_fold": 1,
+  "selected_model": "auc_weighted_ensemble",
+  "signal_file": "C:\\Users\\79967\\Downloads\\中芯国际-深度学习分析\\ZXGJ-DeepL\\outputs\\diagnostics\\research_full\\vnpy_backtest\\dual_signal.csv",
+  "signal_count": 2368,
+  "stats": {
+    "start_date": "2021-10-20",
+    "end_date": "2021-12-28",
+    "total_days": 50,
+    "profit_days": 20,
+    "loss_days": 30,
+    "capital": 1000000.0,
+    "end_balance": 999058.109,
+    "max_drawdown": -1214.2159999998985,
+    "max_ddpercent": -0.12139594600170105,
+    "max_drawdown_duration": 44,
+    "total_net_pnl": -941.8909999999995,
+    "daily_net_pnl": -18.83781999999999,
+    "total_commission": 592.891,
+    "daily_commission": 11.857819999999998,
+    "total_slippage": 535.0,
+    "daily_slippage": 10.7,
+    "total_turnover": 592891.0,
+    "daily_turnover": 11857.82,
+    "total_trade_count": 107,
+    "daily_trade_count": 2.14,
+    "total_return": -0.09418909999999725,
+    "annual_return": -0.4521076799999868,
+    "daily_return": -0.001884669716120799,
+    "return_std": 0.008935632782488299,
+    "sharpe_ratio": -3.267499728924485,
+    "ewm_sharpe": -3.411761702548203,
+    "return_drawdown_ratio": -0.7758834055189737,
+    "rgr_ratio": -4.839669670113738
+  }
+}
+Walk-forward summary:
+{
+  "model_names": [
+    "transformer_lstm",
+    "lstm",
+    "cnn",
+    "mlp",
+    "random_forest",
+    "logistic_regression"
+  ],
+  "split_count": 3,
+  "executed_fold_count": 3,
+  "mean_total_return": -0.0915237457625202,
+  "median_total_return": -0.09937866650057137,
+  "mean_alpha_total_return": -0.027272432192498457,
+  "median_alpha_total_return": -0.02655051755399851,
+  "mean_test_buy_auc": 0.5900709484321544,
+  "median_test_buy_auc": 0.5679970082240047,
+  "mean_test_sell_auc": 0.5593288865270728,
+  "median_test_sell_auc": 0.5582729381813702,
+  "total_trades": 206,
+  "stress_min_alpha_total_return": -0.07323866896149878,
+  "stress_worst_alpha_drawdown": -0.08010289356549882,
+  "quality_report": {
+    "gates": {
+      "min_folds": 3,
+      "min_total_trades": 30,
+      "min_median_test_buy_auc": 0.52,
+      "min_median_alpha_return": 0.0,
+      "max_median_drawdown": -0.08
+    },
+    "observed": {
+      "fold_count": 3,
+      "total_trades": 206,
+      "median_test_buy_auc": 0.5679970082240047,
+      "median_alpha_return": -0.02655051755399851,
+      "median_max_drawdown": -0.028725956361454474,
+      "drawdown_metric": "alpha_max_drawdown",
+      "return_metric": "alpha_total_return"
+    },
+    "checks": {
+      "enough_folds": true,
+      "enough_trades": true,
+      "buy_auc_above_gate": true,
+      "alpha_return_above_gate": false,
+      "drawdown_within_gate": true
+    },
+    "all_passed": false,
+    "note": "Research gate only. Passing this does not prove live-trading readiness."
+  },
+  "methodology": {
+    "split_policy": "chronological walk-forward by bar position; no random shuffle",
+    "fold_policy": "each train window is split into subtrain and calibration; fold validation is treated as out-of-sample test",
+    "preprocessing_policy": "winsorization and standardization are fit on subtrain only, then applied to calibration and test",
+    "threshold_policy": "buy/sell thresholds are calibration-set fixed quantiles, never selected from the fold test window",
+    "ensemble_policy": "model weights are proportional to validation AUC edge over 0.5; equal fallback if no model beats random",
+    "execution_policy": "signal at bar t, execute at next bar open with commission, slippage, lot size, no-overlap state machine, tp/sl and no-overnight handling",
+    "a_share_t0_policy": "default inventory mode starts with tradable base shares; same-day sells use existing inventory, buybacks restore inventory, and buy-first exits sell old inventory rather than same-day purchases",
+    "liquidity_policy": "single trade size is capped by max_participation_rate of next-bar volume when volume is available",
+    "explainability_policy": "optional per-fold permutation/SHAP for sklearn models and input-gradient importance for torch sequence models"
+  }
+}
+Walk-forward report: outputs\diagnostics\research_full\walk_forward\walk_forward_report.md
+Live readiness:
+{
+  "status": "FAIL",
+  "live_gates": {
+    "reproducibility_clean_source_tree": true,
+    "feature_leakage_passed": true,
+    "execution_feasibility_passed": true,
+    "walk_forward_quality_passed": false,
+    "min_executed_folds": false,
+    "min_total_trades": true,
+    "positive_median_alpha_return": false,
+    "median_buy_auc_above_live_floor": true,
+    "median_sell_auc_above_live_floor": true,
+    "drawdown_within_live_limit": true,
+    "stress_alpha_positive": false,
+    "stress_drawdown_within_live_limit": false,
+    "shadow_monitoring_passed": false
+  },
+  "observed": {
+    "fold_count": 3,
+    "total_trades": 206,
+    "median_alpha_total_return": -0.02655051755399851,
+    "median_test_buy_auc": 0.5679970082240047,
+    "median_test_sell_auc": 0.5582729381813702,
+    "median_max_drawdown": -0.028725956361454474,
+    "stress_min_alpha_total_return": -0.07323866896149878,
+    "stress_worst_alpha_drawdown": -0.08010289356549882,
+    "shadow_monitoring_status": null,
+    "execution_feasibility_status": "PASS"
+  },
+  "quality_report": {
+    "gates": {
+      "min_folds": 3,
+      "min_total_trades": 30,
+      "min_median_test_buy_auc": 0.52,
+      "min_median_alpha_return": 0.0,
+      "max_median_drawdown": -0.08
+    },
+    "observed": {
+      "fold_count": 3,
+      "total_trades": 206,
+      "median_test_buy_auc": 0.5679970082240047,
+      "median_alpha_return": -0.02655051755399851,
+      "median_max_drawdown": -0.028725956361454474,
+      "drawdown_metric": "alpha_max_drawdown",
+      "return_metric": "alpha_total_return"
+    },
+    "checks": {
+      "enough_folds": true,
+      "enough_trades": true,
+      "buy_auc_above_gate": true,
+      "alpha_return_above_gate": false,
+      "drawdown_within_gate": true
+    },
+    "all_passed": false,
+    "note": "Research gate only. Passing this does not prove live-trading readiness."
+  },
+  "shadow_monitoring_report": null,
+  "execution_feasibility_audit": {
+    "status": "PASS",
+    "checks": {
+      "required_columns_present": true,
+      "datetime_index_monotonic": true,
+      "no_duplicate_timestamps": true,
+      "no_null_ohlcv_bars": true,
+      "no_nonpositive_price_bars": true,
+      "ohlc_ranges_consistent": true,
+      "zero_volume_ratio_within_limit": true,
+      "outside_session_ratio_within_limit": true,
+      "short_day_ratio_within_limit": true,
+      "extreme_daily_moves_within_limit": true
+    },
+    "observed": {
+      "row_count": 67968,
+      "trade_day_count": 1416,
+      "missing_required_cols": [],
+      "missing_optional_cols": [],
+      "duplicate_timestamps": 0,
+      "outside_session_bars": 0,
+      "outside_session_ratio": 0.0,
+      "null_ohlcv_bars": 0,
+      "nonpositive_price_bars": 0,
+      "zero_volume_bars": 0,
+      "zero_volume_ratio": 0.0,
+      "high_low_inconsistent": 0,
+      "open_outside_range": 0,
+      "close_outside_range": 0,
+      "short_day_count": 0,
+      "short_day_ratio": 0.0,
+      "max_bar_shortfall": 0,
+      "extreme_daily_move_count": 0,
+      "price_limit_checked_day_count": 1377,
+      "price_limit_skipped_gap_day_count": 38,
+      "max_abs_daily_return": 0.2940034512510785,
+      "max_abs_price_limit_checked_return": 0.1999467518636846
+    },
+    "thresholds": {
+      "expected_bars_per_day": 48,
+      "min_bars_per_day": 40,
+      "max_zero_volume_bar_ratio": 0.001,
+      "max_outside_session_bar_ratio": 0.0,
+      "max_short_day_ratio": 0.02,
+      "a_share_price_limit_rate": 0.2,
+      "price_limit_tolerance": 0.005,
+      "price_limit_check_max_gap_days": 3,
+      "max_extreme_daily_move_count": 0
+    },
+    "hard_rule": "No live deployment if execution feasibility audit fails."
+  },
+  "hard_rule": "No real capital deployment unless status == PASS and all artifacts are reviewed."
+}
+Output directory: outputs\diagnostics\research_full
+Final summary: outputs\diagnostics\research_full\final_run_summary.json
+Prepared rows: 67725, features: 194
