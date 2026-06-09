@@ -1,9 +1,0 @@
-{
-  "stage": "completed",
-  "status": "COMPLETED",
-  "updated_at": "2026-06-04T14:31:02.201607",
-  "details": {
-    "final_run_summary": "outputs\\diagnostics\\basic_bucket_test_3fold_sell_only\\final_run_summary.json",
-    "live_readiness_status": "FAIL"
-  }
-}

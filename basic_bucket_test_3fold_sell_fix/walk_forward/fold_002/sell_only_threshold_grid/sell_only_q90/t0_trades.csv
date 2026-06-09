@@ -1,2 +1,0 @@
-leg_type,entry_time,exit_time,entry_price,exit_price,shares,position_pct,entry_prob,exit_prob,gross_return,net_return,exit_reason
-sell_first,2022-01-12 09:40:00,2022-01-12 10:00:00,52.81358000000001,52.94646,5600,1.0,0.6214375753229986,0.3851848722778944,-0.002509705086987779,-0.005509705086987779,stop_loss_buyback

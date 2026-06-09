@@ -1,2 +1,0 @@
-leg_type,entry_time,exit_time,entry_price,exit_price,shares,position_pct,entry_prob,exit_prob,gross_return,net_return,exit_reason
-sell_first,2020-09-21 09:55:00,2020-09-21 10:25:00,57.95101,57.558765,2800,0.5486674165731996,0.6998486667871475,0.24720879983424157,0.006814687563223343,0.0038146875632233427,take_profit_buyback

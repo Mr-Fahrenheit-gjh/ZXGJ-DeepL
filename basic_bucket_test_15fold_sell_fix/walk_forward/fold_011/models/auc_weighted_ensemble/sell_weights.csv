@@ -1,5 +1,0 @@
-model,side,valid_auc,raw_weight,weight,weight_method
-transformer_lstm,sell,0.45480769230769236,0.0,0.25,equal_fallback_no_positive_auc_edge
-lstm,sell,0.41387362637362635,0.0,0.25,equal_fallback_no_positive_auc_edge
-cnn,sell,0.46744505494505495,0.0,0.25,equal_fallback_no_positive_auc_edge
-mlp,sell,0.41785714285714287,0.0,0.25,equal_fallback_no_positive_auc_edge
